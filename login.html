@@ -5,32 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
-</head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
+    
+    <!-- ETIQUETAS PWA AÑADIDAS -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4338ca">
 
-    <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-        <h2 class="text-2xl font-bold text-center text-gray-900 mb-6">Iniciar Sesión</h2>
-        <form id="login-form" class="space-y-6">
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
-                <input type="email" id="email" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500">
+    <style> 
+        body { font-family: 'Inter', sans-serif; } 
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md">
+        <!-- LOGO AÑADIDO -->
+        <div class="text-center mb-6">
+            <div class="bg-indigo-700 p-3 rounded-lg inline-block">
+                <svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                <input type="password" id="password" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500">
-            </div>
-            <p id="error-message" class="text-red-500 text-sm hidden"></p>
-            <div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                    Entrar
-                </button>
-            </div>
-        </form>
-        <p class="mt-4 text-center text-sm text-gray-600">
-            ¿No tienes una cuenta? <a href="registro.html" class="font-medium text-blue-600 hover:text-blue-500">Regístrate aquí</a>
-        </p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-bold text-center text-gray-900 mb-6">Iniciar Sesión</h2>
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                    <input type="email" id="email" required autocomplete="email" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <input type="password" id="password" required autocomplete="current-password" class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                </div>
+                <p id="error-message" class="text-red-500 text-sm hidden"></p>
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                        Entrar
+                    </button>
+                </div>
+            </form>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                ¿No tienes una cuenta? <a href="registro.html" class="font-medium text-indigo-600 hover:text-indigo-500">Regístrate aquí</a>
+            </p>
+        </div>
     </div>
 
     <script type="module">
@@ -44,7 +64,7 @@
         // Si el usuario ya está logueado, redirigir al panel
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                window.location.href = 'index.html';
+                window.location.replace('index.html');
             }
         });
 
@@ -62,7 +82,13 @@
                 })
                 .catch((error) => {
                     console.error("Error de inicio de sesión:", error.code);
-                    errorMessage.textContent = 'Correo o contraseña incorrectos.';
+                    let friendlyMessage = 'Correo o contraseña incorrectos.';
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                        friendlyMessage = 'Las credenciales no son correctas. Por favor, inténtelo de nuevo.';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        friendlyMessage = 'Acceso bloqueado temporalmente por demasiados intentos fallidos.';
+                    }
+                    errorMessage.textContent = friendlyMessage;
                     errorMessage.classList.remove('hidden');
                 });
         });
