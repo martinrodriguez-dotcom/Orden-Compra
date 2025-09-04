@@ -8,133 +8,157 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
-        <!-- Botón para volver -->
-        <div class="mb-6">
-            <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                </svg>
-                Volver al listado
-            </a>
-        </div>
-
-        <!-- Contenedor principal de la orden -->
+        <div class="mb-6"><a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>Volver al listado</a></div>
+        
         <div id="order-details-container" class="bg-white rounded-lg shadow-lg p-6 md:p-8">
-            <!-- Cabecera -->
             <header class="border-b pb-6 mb-6">
                 <div class="flex flex-wrap justify-between items-start gap-4">
-                    <div>
-                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Orden: <span id="order-id" class="text-blue-600"></span></h1>
-                        <p id="order-name" class="text-lg text-gray-600 mt-1"></p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">Estado</p>
-                        <span id="order-status" class="text-lg font-bold px-4 py-2 rounded-full text-white"></span>
-                    </div>
+                    <div><h1 class="text-3xl md:text-4xl font-bold text-gray-900">Orden: <span id="order-id" class="text-blue-600"></span></h1><p id="order-name" class="text-lg text-gray-600 mt-1"></p></div>
+                    <div class="text-right"><p class="text-sm text-gray-500">Estado Actual</p><span id="order-status" class="text-lg font-bold px-4 py-2 rounded-full text-white"></span></div>
                 </div>
             </header>
 
-            <!-- Cuerpo de la orden -->
-            <main>
-                <!-- Justificación -->
-                <section class="mb-8">
-                    <h2 class="text-xl font-semibold mb-2">Justificación</h2>
-                    <p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p>
-                </section>
+            <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Columna Izquierda: Detalles e Items -->
+                <div class="md:col-span-2 space-y-8">
+                    <section><h2 class="text-xl font-semibold mb-2">Justificación</h2><p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p></section>
+                    <section><h2 class="text-xl font-semibold mb-3">Artículos Solicitados</h2><div class="overflow-x-auto border rounded-lg"><table class="min-w-full"><thead><tr class="bg-gray-100"><th class="p-3 text-left font-semibold text-sm text-gray-600">Descripción</th><th class="p-3 text-center font-semibold text-sm text-gray-600">Cantidad</th></tr></thead><tbody id="items-table-body"></tbody></table></div></section>
+                </div>
 
-                <!-- Lista de Items (SIN PRECIOS) -->
-                <section>
-                    <h2 class="text-xl font-semibold mb-3">Artículos Solicitados</h2>
-                    <div class="overflow-x-auto border rounded-lg">
-                        <table class="min-w-full">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="p-3 text-left font-semibold text-sm text-gray-600">Descripción del Artículo</th>
-                                    <th class="p-3 text-center font-semibold text-sm text-gray-600">Cantidad</th>
-                                </tr>
-                            </thead>
-                            <tbody id="items-table-body">
-                                <!-- Filas de items se insertarán aquí dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
+                <!-- Columna Derecha: Historial y Acciones -->
+                <div class="md:col-span-1 space-y-8">
+                    <!-- NUEVO: Panel de Historial -->
+                    <section>
+                        <h2 class="text-xl font-semibold mb-3">Historial de la Orden</h2>
+                        <div id="history-list" class="space-y-4 border-l-2 border-gray-200 ml-2">
+                            <!-- El historial se generará aquí -->
+                        </div>
+                    </section>
+                    
+                    <!-- NUEVO: Panel de Acciones Dinámico -->
+                    <section id="action-panel-container">
+                        <h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2>
+                        <div id="action-panel" class="bg-gray-50 border rounded-lg p-4">
+                            <!-- El contenido dinámico irá aquí -->
+                        </div>
+                    </section>
+                </div>
             </main>
         </div>
         
-        <!-- Mensaje si la orden no se encuentra -->
-        <div id="order-not-found" class="hidden text-center py-12">
-             <h2 class="text-2xl font-bold text-red-600">Orden no encontrada</h2>
-             <p class="text-gray-600 mt-2">No se pudo encontrar la orden de compra especificada.</p>
-        </div>
+        <div id="order-not-found" class="hidden text-center py-12"><h2 class="text-2xl font-bold text-red-600">Orden no encontrada</h2><p class="text-gray-600 mt-2">No se pudo encontrar la orden de compra especificada.</p></div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- DATOS y ESTADO ---
             const getOrders = () => JSON.parse(localStorage.getItem('purchaseOrders')) || [];
-            const statusColors = { 'Aprobado': 'bg-green-500', 'Pendiente': 'bg-yellow-500', 'Rechazado': 'bg-red-500' };
+            const saveOrders = (orders) => localStorage.setItem('purchaseOrders', JSON.stringify(orders));
+            const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
 
-            // --- SELECTORES DEL DOM ---
-            const orderDetailsContainer = document.getElementById('order-details-container');
-            const orderNotFoundDiv = document.getElementById('order-not-found');
-            
-            // --- FUNCIÓN DE RENDERIZADO ---
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get('id');
+            const orders = getOrders();
+            const currentOrder = orders.find(o => o.id === orderId);
+
             const renderOrderDetails = (order) => {
-                // Cabecera
                 document.getElementById('order-id').textContent = order.id;
                 document.getElementById('order-name').textContent = order.name;
                 const statusBadge = document.getElementById('order-status');
                 statusBadge.textContent = order.status;
-                statusBadge.className = `text-lg font-bold px-4 py-2 rounded-full text-white ${statusColors[order.status] || 'bg-gray-400'}`;
-
-                // Cuerpo
+                statusBadge.className = `text-lg font-bold px-4 py-2 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}`;
                 document.getElementById('order-justification').textContent = order.justification;
-
-                // Tabla de Items
                 const itemsTableBody = document.getElementById('items-table-body');
-                itemsTableBody.innerHTML = ''; // Limpiar tabla
+                itemsTableBody.innerHTML = '';
                 if (order.items && order.items.length > 0) {
                     order.items.forEach(item => {
-                        const row = document.createElement('tr');
-                        row.className = 'border-b last:border-b-0';
-                        row.innerHTML = `
-                            <td class="p-3">${item.description}</td>
-                            <td class="p-3 text-center">${item.quantity}</td>
-                        `;
-                        itemsTableBody.appendChild(row);
+                        itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`;
                     });
                 } else {
-                    itemsTableBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-500">No hay artículos en esta orden.</td></tr>';
+                    itemsTableBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-500">No hay artículos.</td></tr>';
                 }
             };
             
-            // --- INICIALIZACIÓN ---
-            const params = new URLSearchParams(window.location.search);
-            const orderId = params.get('id');
-            
-            if (orderId) {
-                const orders = getOrders();
-                const currentOrder = orders.find(o => o.id === orderId);
-
-                if (currentOrder) {
-                    renderOrderDetails(currentOrder);
-                } else {
-                    // Orden no encontrada
-                    orderDetailsContainer.classList.add('hidden');
-                    orderNotFoundDiv.classList.remove('hidden');
+            // NUEVA FUNCIÓN: Renderizar el historial
+            const renderHistory = (order) => {
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = '';
+                if (order.historial && order.historial.length > 0) {
+                    order.historial.forEach(entry => {
+                        const date = new Date(entry.date).toLocaleString('es-ES');
+                        historyList.innerHTML += `
+                            <div class="relative pl-6">
+                                <div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div>
+                                <h4 class="font-semibold">${entry.status}</h4>
+                                <p class="text-xs text-gray-500">${date}</p>
+                            </div>
+                        `;
+                    });
                 }
+            };
+
+            // NUEVA FUNCIÓN: Renderizar el panel de acciones
+            const renderActionPanel = (order) => {
+                const actionPanel = document.getElementById('action-panel');
+                actionPanel.innerHTML = ''; // Limpiar panel
+
+                switch (order.status) {
+                    case 'Pendiente de Aprobación':
+                        actionPanel.innerHTML = `
+                            <p class="text-sm text-gray-700 mb-4">La orden requiere aprobación para continuar al siguiente paso.</p>
+                            <div class="flex flex-col gap-2">
+                                <button id="approve-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar Orden</button>
+                                <button id="reject-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600">Rechazar Orden</button>
+                            </div>
+                        `;
+                        document.getElementById('approve-btn').addEventListener('click', () => updateUserAction('Presupuestos Pendientes'));
+                        document.getElementById('reject-btn').addEventListener('click', () => updateUserAction('Rechazada'));
+                        break;
+                    
+                    case 'Presupuestos Pendientes':
+                        actionPanel.innerHTML = `<p class="text-sm text-gray-700">El siguiente paso es cargar los presupuestos de los proveedores para esta orden.</p><button class="w-full mt-4 bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded-md cursor-not-allowed">Cargar Presupuestos (Próximamente)</button>`;
+                        break;
+                    
+                    case 'Rechazada':
+                        actionPanel.innerHTML = `<p class="text-sm font-semibold text-red-700">Esta orden ha sido rechazada. No hay más acciones disponibles.</p>`;
+                        break;
+                        
+                    default:
+                        actionPanel.innerHTML = `<p class="text-sm text-gray-700">No hay acciones disponibles para este estado.</p>`;
+                }
+            };
+            
+            // NUEVA FUNCIÓN: Actualizar estado y guardar
+            const updateUserAction = (newStatus) => {
+                const orderIndex = orders.findIndex(o => o.id === orderId);
+                if (orderIndex === -1) return;
+                
+                // Actualizar estado
+                orders[orderIndex].status = newStatus;
+                
+                // Añadir al historial
+                if (!orders[orderIndex].historial) {
+                    orders[orderIndex].historial = [];
+                }
+                orders[orderIndex].historial.push({ status: newStatus.replace('Pendientes', ''), date: new Date().toISOString() });
+                
+                // Guardar y recargar
+                saveOrders(orders);
+                location.reload();
+            };
+
+            // --- INICIALIZACIÓN ---
+            if (orderId && currentOrder) {
+                renderOrderDetails(currentOrder);
+                renderHistory(currentOrder);
+                renderActionPanel(currentOrder);
             } else {
-                // No se proporcionó ID
-                orderDetailsContainer.classList.add('hidden');
-                orderNotFoundDiv.classList.remove('hidden');
+                document.getElementById('order-details-container').classList.add('hidden');
+                document.getElementById('order-not-found').classList.remove('hidden');
             }
         });
     </script>
