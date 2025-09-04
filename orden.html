@@ -125,6 +125,38 @@
         </div>
     </div>
 
+    <!-- NUEVO: Modal de Confirmación del Ganador -->
+    <div id="winner-confirmation-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-95 opacity-0">
+            <div class="p-5 border-b bg-green-50">
+                <h3 class="text-2xl font-semibold text-green-800">Proveedor Ganador Recomendado</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <h4 id="winner-name" class="text-3xl font-bold text-center"></h4>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Costo Final</p>
+                        <p id="winner-final-cost" class="text-2xl font-bold text-green-700"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Valor Presente (Costo Real)</p>
+                        <p id="winner-present-value" class="text-2xl font-bold text-blue-700"></p>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-semibold text-gray-800 mb-2">Justificación de la Elección:</h5>
+                    <ul id="winner-justification-list" class="list-disc list-inside space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
+                        <!-- La justificación se generará aquí -->
+                    </ul>
+                </div>
+            </div>
+            <div class="flex justify-end items-center p-5 border-t bg-gray-50 gap-3">
+                <button id="cancel-winner-btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button>
+                <button id="confirm-winner-btn" class="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 font-bold">Confirmar y Asignar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Carga del archivo de lógica -->
     <script src="orden.js" type="module"></script>
 </body>
