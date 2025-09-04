@@ -22,9 +22,7 @@
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Panel de Órdenes de Compra</h1>
                     <p id="welcome-message" class="text-gray-600 mt-1">Bienvenido al sistema.</p>
                 </div>
-                <!-- CONTENEDOR DE AUTENTICACIÓN DINÁMICO -->
                 <div id="auth-container" class="bg-white p-3 rounded-lg shadow-sm text-sm w-full sm:w-auto mt-4 sm:mt-0">
-                    <!-- Contenido se carga desde JS -->
                     <p class="text-center">Cargando sesión...</p>
                 </div>
             </div>
@@ -38,7 +36,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
     </button>
     
-    <!-- Modal para Vista Rápida -->
+    <!-- Modal para Vista Rápida (ACTUALIZADO) -->
     <div id="view-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md flex flex-col transform transition-all scale-95 opacity-0">
             <div class="flex justify-between items-center p-5 border-b">
@@ -49,6 +47,11 @@
                 <div><p class="text-sm text-gray-500">Nombre</p><p id="modal-view-name" class="font-medium text-lg"></p></div>
                 <div><p class="text-sm text-gray-500">Justificación</p><p id="modal-view-justification" class="font-normal text-base bg-gray-50 p-2 rounded-md"></p></div>
                 <div><p class="text-sm text-gray-500">Estado</p><span id="modal-view-status" class="text-lg font-bold px-3 py-1 rounded-full text-white"></span></div>
+                <!-- NUEVO: Campo para mostrar responsables -->
+                <div>
+                    <p class="text-sm text-gray-500">Responsable(s) de la Etapa</p>
+                    <p id="modal-view-responsibles" class="font-medium text-lg text-purple-700"></p>
+                </div>
             </div>
             <div class="flex justify-end items-center p-5 border-t bg-gray-50 rounded-b-lg gap-3">
                 <button class="close-modal-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cerrar</button>
@@ -60,19 +63,8 @@
     <!-- Modal para Crear Orden -->
     <div id="create-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="flex justify-between items-center p-5 border-b">
-                <h3 class="text-2xl font-semibold">Nueva Orden de Compra</h3>
-                <button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            </div>
-            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-6">
-                <div><label for="orderName" class="block text-sm font-medium text-gray-700">Nombre de la orden</label><input type="text" id="orderName" name="orderName" placeholder="Ej: Compra de insumos Q3" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm"></div>
-                <div id="items-container" class="space-y-4 border-t pt-4">
-                    <h4 class="font-semibold text-lg">Artículos</h4>
-                    <div class="item-row grid grid-cols-12 gap-2 items-center"><input type="text" placeholder="Descripción" class="item-desc col-span-8 border p-2 rounded-md" required><input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required><button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:opacity-50" disabled>X</button></div>
-                </div>
-                <button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Agregar Artículo</button>
-                <div><label for="justification" class="block text-sm font-medium text-gray-700">Justificación</label><textarea id="justification" name="justification" rows="4" placeholder="Ej: Renovación de stock." required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm"></textarea></div>
-            </form>
+            <div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Nueva Orden de Compra</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-6"><div><label for="orderName" class="block text-sm font-medium text-gray-700">Nombre de la orden</label><input type="text" id="orderName" name="orderName" placeholder="Ej: Compra de insumos Q3" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm"></div><div id="items-container" class="space-y-4 border-t pt-4"><h4 class="font-semibold text-lg">Artículos</h4><div class="item-row grid grid-cols-12 gap-2 items-center"><input type="text" placeholder="Descripción" class="item-desc col-span-8 border p-2 rounded-md" required><input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required><button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:opacity-50" disabled>X</button></div></div><button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Agregar Artículo</button><div><label for="justification" class="block text-sm font-medium text-gray-700">Justificación</label><textarea id="justification" name="justification" rows="4" placeholder="Ej: Renovación de stock." required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm"></textarea></div></form>
             <div class="p-5 border-t bg-gray-50"><button type="submit" form="create-order-form" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-bold">Cargar Orden</button></div>
         </div>
     </div>
@@ -87,14 +79,18 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let currentUserData = null; // Guardará los datos del perfil del usuario (nombre, roles, etc.)
-        let ordersUnsubscribe = null; // Para detener el listener de órdenes al cerrar sesión
+        let currentUserData = null;
+        let allUsers = [];
+        let allOrders = [];
+        let ordersUnsubscribe = null;
 
-        // --- Lógica de Autenticación ---
         const authContainer = document.getElementById('auth-container');
         const loadingMessage = document.getElementById('loading-message');
         const ordersGrid = document.getElementById('orders-grid');
         const addOrderBtn = document.getElementById('add-order-btn');
+
+        // NUEVO: Mapa de estados a roles
+        const statusToRoleMap = { 'Pendiente de Aprobación': 2, 'Presupuestos Pendientes': 3, 'Pendiente Aprobar Proveedor': 4, 'Pendiente de Pago': 5 };
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -102,16 +98,14 @@
                 const userDocSnap = await getDoc(userDocRef);
                 if (userDocSnap.exists()) {
                     currentUserData = userDocSnap.data();
-                    sessionStorage.setItem('currentUser', JSON.stringify(currentUserData)); // Guardar en sessionStorage para orden.js
                     renderLoggedInUI(currentUserData);
-                    loadOrders();
+                    loadAppData(); // Cargar usuarios y órdenes
                 } else {
                     alert("Error: No se encontró el perfil de usuario. Se cerrará la sesión.");
                     signOut(auth);
                 }
             } else {
                 currentUserData = null;
-                sessionStorage.removeItem('currentUser');
                 renderLoggedOutUI();
                 if (ordersUnsubscribe) ordersUnsubscribe();
                 loadingMessage.textContent = 'Por favor, inicie sesión para ver las órdenes.';
@@ -120,60 +114,51 @@
         });
 
         function renderLoggedInUI(userData) {
-            authContainer.innerHTML = `
-                <div class="mb-2">
-                    <span class="font-bold">Usuario:</span> <span>${userData.name}</span>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <a href="perfil.html" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 text-center">Mi Perfil</a>
-                    <a href="usuarios.html" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 text-center ${userData.isAdmin ? '' : 'hidden'}">Gestionar Usuarios</a>
-                    <button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Salir</button>
-                </div>
-            `;
+            authContainer.innerHTML = `<div class="mb-2"><span class="font-bold">Usuario:</span> <span>${userData.name}</span></div><div class="flex flex-col sm:flex-row gap-2"><a href="perfil.html" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 text-center">Mi Perfil</a><a href="usuarios.html" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 text-center ${userData.isAdmin ? '' : 'hidden'}">Gestionar Usuarios</a><button id="logout-btn" class="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600">Salir</button></div>`;
             document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
             addOrderBtn.disabled = !(userData.roles.includes(1) || userData.isAdmin);
         }
 
         function renderLoggedOutUI() {
-            authContainer.innerHTML = `
-                <p class="text-center mb-2">No ha iniciado sesión.</p>
-                <div class="flex gap-2">
-                    <a href="login.html" class="w-full bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-center">Iniciar Sesión</a>
-                    <a href="registro.html" class="w-full bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 text-center">Registrarse</a>
-                </div>
-            `;
-             addOrderBtn.disabled = true;
+            authContainer.innerHTML = `<p class="text-center mb-2">No ha iniciado sesión.</p><div class="flex gap-2"><a href="login.html" class="w-full bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-center">Iniciar Sesión</a><a href="registro.html" class="w-full bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 text-center">Registrarse</a></div>`;
+            addOrderBtn.disabled = true;
         }
 
-        // --- Lógica de Órdenes ---
-        function loadOrders() {
+        function loadAppData() {
+            // Cargar todos los usuarios para la lógica de responsables
+            const usersCollection = collection(db, "users");
+            onSnapshot(usersCollection, (snapshot) => {
+                allUsers = snapshot.docs.map(doc => doc.data());
+            });
+
+            // Cargar órdenes
             const ordersCollection = collection(db, "purchaseOrders");
             const q = query(ordersCollection, orderBy("createdAt", "desc"));
             ordersUnsubscribe = onSnapshot(q, (snapshot) => {
-                const allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderOrders(allOrders);
             });
         }
         
         const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-800' };
         
-        function renderOrders(allOrders) { 
+        function renderOrders(orders) { 
             ordersGrid.innerHTML = ''; 
-            if (allOrders.length === 0) { 
+            if (orders.length === 0) { 
                 ordersGrid.innerHTML = '<p id="loading-message" class="col-span-full text-center text-gray-500">No hay órdenes de compra. ¡Crea la primera!</p>'; 
                 return; 
             } 
-            allOrders.forEach(order => { 
+            orders.forEach(order => { 
                 const orderCard = document.createElement('div'); 
                 orderCard.className = 'bg-white rounded-lg shadow-md p-5 flex flex-col cursor-pointer transition-transform transform hover:-translate-y-1'; 
                 orderCard.dataset.orderId = order.id; 
                 orderCard.innerHTML = `<div class="flex justify-between items-start mb-2"><h2 class="text-lg font-bold text-gray-900">${order.orderNumber || order.id.substring(0, 8)}</h2><span class="text-xs font-bold px-2 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}">${order.status}</span></div><p class="text-sm text-gray-600 mb-4 font-semibold">${order.name}</p><div class="mt-auto border-t pt-3"><p class="text-sm text-gray-500">Artículos: <strong>${order.items.length}</strong></p></div>`; 
-                orderCard.addEventListener('click', () => openViewModal(order, allOrders)); 
+                orderCard.addEventListener('click', () => openViewModal(order)); 
                 ordersGrid.appendChild(orderCard); 
             }); 
         };
         
-        function openViewModal(order, allOrders) { 
+        function openViewModal(order) { 
             if (!order) return; 
             const viewOrderModal = document.getElementById('view-order-modal'); 
             document.getElementById('modal-view-id').textContent = order.orderNumber || order.id.substring(0,8); 
@@ -182,6 +167,18 @@
             const statusBadge = document.getElementById('modal-view-status'); 
             statusBadge.textContent = order.status; 
             statusBadge.className = `text-lg font-bold px-3 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}`; 
+            
+            // Lógica para encontrar y mostrar responsables
+            const requiredRole = statusToRoleMap[order.status];
+            let responsibleNames = 'N/A';
+            if (requiredRole) {
+                const responsibleUsers = allUsers.filter(user => (user.roles && user.roles.includes(requiredRole)) || user.isAdmin);
+                if (responsibleUsers.length > 0) {
+                    responsibleNames = responsibleUsers.map(user => user.name).join(', ');
+                }
+            }
+            document.getElementById('modal-view-responsibles').textContent = responsibleNames;
+
             document.getElementById('manage-order-link').href = `orden.html?id=${encodeURIComponent(order.id)}`; 
             openModal(viewOrderModal); 
         };
@@ -189,10 +186,7 @@
         const createOrderForm = document.getElementById('create-order-form');
         createOrderForm.addEventListener('submit', async (e) => { 
             e.preventDefault(); 
-            if (!currentUserData) {
-                alert("Debe iniciar sesión para crear una orden.");
-                return;
-            }
+            if (!currentUserData) { alert("Debe iniciar sesión para crear una orden."); return; }
             const ordersCollectionRef = collection(db, "purchaseOrders");
             const formData = new FormData(createOrderForm); 
             const itemsContainer = document.getElementById('items-container'); 
@@ -226,10 +220,7 @@
         const updateRemoveButtons = () => { const rows = itemsContainer.querySelectorAll('.item-row'); rows.forEach(r => { r.querySelector('.remove-item-btn').disabled = rows.length === 1; }); }; 
         addItemBtn.addEventListener('click', () => { itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); }); 
         addOrderBtn.addEventListener('click', () => { createOrderForm.reset(); itemsContainer.innerHTML = ''; itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); openModal(createOrderModal); }); 
-        document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', (e) => { 
-            const modal = e.target.closest('.modal-backdrop');
-            if (modal) closeModal(modal);
-        }));
+        document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', (e) => { const modal = e.target.closest('.modal-backdrop'); if (modal) closeModal(modal); }));
     </script>
 </body>
 </html>
