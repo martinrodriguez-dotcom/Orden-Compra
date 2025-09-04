@@ -12,10 +12,10 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8">
+    <div id="page-container" class="container mx-auto p-4 md:p-8 hidden">
         <div class="mb-6">
             <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0_0_24_24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
                 Volver al Panel Principal
@@ -24,137 +24,143 @@
         
         <header class="mb-8">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Gestión de Usuarios y Roles</h1>
-            <p class="text-gray-600 mt-1">Cree nuevos usuarios y asigne las etapas del circuito que pueden gestionar.</p>
+            <p class="text-gray-600 mt-1">Aquí puedes editar los roles de los usuarios existentes.</p>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Columna para crear usuarios -->
-            <div class="md:col-span-1">
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-2xl font-semibold mb-4">Crear Nuevo Usuario</h2>
-                    <form id="create-user-form" class="space-y-4">
-                        <div>
-                            <label for="user-name" class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
-                            <input type="text" id="user-name" required class="mt-1 w-full p-2 border rounded-md" placeholder="Ej: martin">
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium text-gray-700 mb-2">Roles Asignados (Etapas)</h3>
-                            <div id="roles-checkboxes" class="space-y-2">
-                                <!-- Checkboxes se generarán aquí -->
-                            </div>
-                        </div>
-                        <!-- NUEVO: Checkbox de Administrador -->
-                        <div class="border-t pt-4">
-                            <div class="flex items-center">
-                                <input id="is-admin" type="checkbox" class="h-4 w-4 rounded text-red-600 focus:ring-red-500">
-                                <label for="is-admin" class="ml-2 text-sm font-bold text-red-700">Es Administrador (Acceso Total)</label>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Crear Usuario</button>
-                    </form>
-                </div>
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Usuarios del Sistema</h2>
+            <div id="user-list" class="space-y-3">
+                <p>Cargando usuarios...</p>
             </div>
+        </div>
+    </div>
+    
+    <div id="loading-message" class="text-center py-12">
+        <p>Verificando permisos...</p>
+    </div>
 
-            <!-- Columna para listar usuarios -->
-            <div class="md:col-span-2">
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-2xl font-semibold mb-4">Usuarios Existentes</h2>
-                    <div id="user-list" class="space-y-3">
-                        <p>Cargando usuarios...</p>
+    <!-- Modal para Editar Roles -->
+    <div id="edit-roles-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-5 border-b">
+                <h3 class="text-xl font-semibold">Editar Roles de <span id="modal-user-name" class="text-blue-600"></span></h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div id="modal-roles-checkboxes" class="space-y-2"></div>
+                <div class="border-t pt-4">
+                    <div class="flex items-center">
+                        <input id="modal-is-admin" type="checkbox" class="h-4 w-4 rounded text-red-600">
+                        <label for="modal-is-admin" class="ml-2 text-sm font-bold text-red-700">Es Administrador</label>
                     </div>
                 </div>
+            </div>
+            <div class="p-4 bg-gray-50 flex justify-end gap-3">
+                <button id="cancel-edit-btn" class="bg-gray-200 px-4 py-2 rounded-md">Cancelar</button>
+                <button id="save-roles-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md">Guardar Cambios</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBNnUbg_LL6w4dZxqSA3vwCb7e1AHmM1vY",
-            authDomain: "orden-compra-d803f.firebaseapp.com",
-            projectId: "orden-compra-d803f",
-            storageBucket: "orden-compra-d803f.appspot.com",
-            messagingSenderId: "441828854057",
-            appId: "1:441828854057:web:3037aabc9d02e6e27fcf38"
-        };
-        
+        const firebaseConfig = { apiKey: "AIzaSyBNnUbg_LL6w4dZxqSA3vwCb7e1AHmM1vY", authDomain: "orden-compra-d803f.firebaseapp.com", projectId: "orden-compra-d803f", storageBucket: "orden-compra-d803f.appspot.com", messagingSenderId: "441828854057", appId: "1:441828854057:web:3037aabc9d02e6e27fcf38" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        await signInAnonymously(auth);
 
-        const usersCollection = collection(db, "users");
+        const rolesDescription = { 1: "1. Cargar Orden", 2: "2. Aprobar Orden", 3: "3. Cargar Presupuestos", 4: "4. Aprobar Proveedor", 5: "5. Registrar Pago" };
 
-        const rolesDescription = {
-            1: "1. Cargar Nueva Orden",
-            2: "2. Aprobar Orden Inicial",
-            3: "3. Cargar Presupuestos",
-            4: "4. Aprobar Proveedor",
-            5: "5. Registrar Pago"
-        };
+        const loadingMessage = document.getElementById('loading-message');
+        const pageContainer = document.getElementById('page-container');
 
-        const rolesCheckboxesContainer = document.getElementById('roles-checkboxes');
-        rolesCheckboxesContainer.innerHTML = Object.entries(rolesDescription).map(([roleId, desc]) => `
-            <div class="flex items-center">
-                <input id="role-${roleId}" type="checkbox" value="${roleId}" class="h-4 w-4 rounded role-checkbox">
-                <label for="role-${roleId}" class="ml-2 text-sm">${desc}</label>
-            </div>
-        `).join('');
-
-        const createUserForm = document.getElementById('create-user-form');
-        createUserForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const userName = document.getElementById('user-name').value;
-            const selectedRoles = Array.from(document.querySelectorAll('.role-checkbox:checked')).map(cb => parseInt(cb.value));
-            const isAdmin = document.getElementById('is-admin').checked;
-
-            if (!userName) {
-                alert("El nombre de usuario es requerido.");
-                return;
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists() && userDocSnap.data().isAdmin) {
+                    // Si es admin, muestra la página y carga los datos
+                    loadingMessage.classList.add('hidden');
+                    pageContainer.classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    // No es admin, muestra mensaje de acceso denegado
+                    loadingMessage.innerHTML = '<h2>Acceso Denegado</h2><p>Esta página es solo para administradores.</p><a href="index.html" class="text-blue-600">Volver</a>';
+                }
+            } else {
+                window.location.href = 'login.html';
             }
+        });
 
-            try {
-                await addDoc(usersCollection, { 
-                    name: userName, 
-                    roles: selectedRoles,
-                    isAdmin: isAdmin 
+        function loadUsers() {
+            const usersCollection = collection(db, "users");
+            const userListContainer = document.getElementById('user-list');
+
+            onSnapshot(usersCollection, (snapshot) => {
+                if (snapshot.empty) {
+                    userListContainer.innerHTML = '<p class="text-gray-500">No hay usuarios registrados.</p>';
+                    return;
+                }
+                userListContainer.innerHTML = snapshot.docs.map(doc => {
+                    const user = { id: doc.id, ...doc.data() };
+                    const adminBadge = user.isAdmin ? `<span class="bg-red-100 text-red-800 text-xs font-bold mr-2 px-2.5 py-0.5 rounded-full">Admin</span>` : '';
+                    const userRoles = (user.roles || []).map(roleId => `<span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Etapa ${roleId}</span>`).join('');
+                    return `
+                        <div class="border rounded-md p-3 flex justify-between items-center flex-wrap gap-2">
+                            <div>
+                                <p class="font-bold">${user.name}</p>
+                                <p class="text-xs text-gray-500">${user.email}</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="text-right">${adminBadge}${userRoles}</div>
+                                <button data-userid="${user.id}" class="edit-btn bg-gray-200 px-3 py-1 rounded-md text-sm hover:bg-gray-300">Editar</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', async (e) => {
+                        const userId = e.target.dataset.userid;
+                        const userDoc = await getDoc(doc(db, "users", userId));
+                        if (userDoc.exists()) {
+                            openEditModal(userDoc.data(), userId);
+                        }
+                    });
                 });
-                createUserForm.reset();
+            });
+        }
+        
+        const modal = document.getElementById('edit-roles-modal');
+        function openEditModal(userData, userId) {
+            document.getElementById('modal-user-name').textContent = userData.name;
+            const rolesContainer = document.getElementById('modal-roles-checkboxes');
+            rolesContainer.innerHTML = Object.entries(rolesDescription).map(([id, desc]) => `
+                <div class="flex items-center"><input id="modal-role-${id}" type="checkbox" value="${id}" class="h-4 w-4 rounded role-checkbox" ${(userData.roles || []).includes(parseInt(id)) ? 'checked' : ''}><label for="modal-role-${id}" class="ml-2 text-sm">${desc}</label></div>
+            `).join('');
+            document.getElementById('modal-is-admin').checked = userData.isAdmin || false;
+            
+            document.getElementById('save-roles-btn').onclick = () => saveRoles(userId);
+            modal.classList.remove('hidden');
+        }
+
+        document.getElementById('cancel-edit-btn').addEventListener('click', () => modal.classList.add('hidden'));
+
+        async function saveRoles(userId) {
+            const selectedRoles = Array.from(document.querySelectorAll('#modal-roles-checkboxes .role-checkbox:checked')).map(cb => parseInt(cb.value));
+            const isAdmin = document.getElementById('modal-is-admin').checked;
+            
+            try {
+                const userDocRef = doc(db, "users", userId);
+                await updateDoc(userDocRef, { roles: selectedRoles, isAdmin: isAdmin });
+                modal.classList.add('hidden');
             } catch (error) {
-                console.error("Error al crear usuario:", error);
-                alert("No se pudo crear el usuario.");
+                console.error("Error al actualizar roles:", error);
+                alert("No se pudieron guardar los cambios.");
             }
-        });
-
-        const userListContainer = document.getElementById('user-list');
-        onSnapshot(usersCollection, (snapshot) => {
-            if (snapshot.empty) {
-                userListContainer.innerHTML = '<p class="text-gray-500">No hay usuarios creados.</p>';
-                return;
-            }
-            userListContainer.innerHTML = snapshot.docs.map(doc => {
-                const user = doc.data();
-                const adminBadge = user.isAdmin 
-                    ? `<span class="bg-red-100 text-red-800 text-xs font-bold mr-2 px-2.5 py-0.5 rounded-full">Admin</span>`
-                    : '';
-
-                const userRoles = user.roles.map(roleId => `
-                    <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
-                        Etapa ${roleId}
-                    </span>
-                `).join('');
-
-                return `
-                    <div class="border rounded-md p-3 flex justify-between items-center flex-wrap gap-2">
-                        <p class="font-bold">${user.name}</p>
-                        <div>${adminBadge}${userRoles}</div>
-                    </div>
-                `;
-            }).join('');
-        });
+        }
     </script>
 </body>
 </html>
