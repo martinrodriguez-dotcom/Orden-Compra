@@ -1,20 +1,20 @@
 {
     "name": "Gestor de Órdenes de Compra",
     "short_name": "Gestor OC",
-    "start_url": "index.html",
+    "start_url": "login.html",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#4f46e5",
+    "theme_color": "#4338ca",
     "description": "Una aplicación para gestionar el circuito completo de órdenes de compra.",
     "icons": [
         {
-            "src": "https://placehold.co/192x192/4f46e5/ffffff?text=OC",
+            "src": "https://i.ibb.co/d2C1J2B/logo192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any maskable"
         },
         {
-            "src": "https://placehold.co/512x512/4f46e5/ffffff?text=OC",
+            "src": "https://i.ibb.co/Tmg3S17/logo512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
