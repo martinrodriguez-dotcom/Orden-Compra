@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Órdenes de Compra</title>
+    <!-- Incluyendo Tailwind CSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluyendo un set de íconos (Heroicons) -->
+    <script src="https://unpkg.com/heroicons@2.1.3/24/outline/index.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Estilo para la barra de scroll */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Contenedor Principal -->
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Gestión de Órdenes de Compra</h1>
+            <p class="text-gray-600 mt-1">Visualiza y administra todas tus órdenes desde un solo lugar.</p>
+        </header>
+
+        <!-- Grilla de Órdenes de Compra -->
+        <main id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <!-- Las tarjetas de órdenes de compra se insertarán aquí dinámicamente -->
+        </main>
+    </div>
+
+    <!-- Botón Flotante para Agregar Nueva Orden -->
+    <button id="add-order-btn" class="fixed bottom-8 left-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+    </button>
+
+    <!-- Modal para Ver Detalles de la Orden -->
+    <div id="view-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
+            <!-- Cabecera del Modal -->
+            <div class="flex justify-between items-center p-5 border-b">
+                <h3 class="text-2xl font-semibold">Detalles de la Orden: <span id="modal-view-id" class="text-blue-600"></span></h3>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <!-- Cuerpo del Modal -->
+            <div class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500">Proveedor</p>
+                        <p id="modal-view-provider" class="font-medium text-lg"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Fecha de Emisión</p>
+                        <p id="modal-view-date" class="font-medium text-lg"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Estado</p>
+                        <span id="modal-view-status" class="text-lg font-bold px-3 py-1 rounded-full text-white"></span>
+                    </div>
+                </div>
+                
+                <h4 class="text-xl font-semibold mb-4 border-t pt-4">Items</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Unit.</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-view-items" class="bg-white divide-y divide-gray-200">
+                            <!-- Filas de items se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+             <!-- Pie del Modal -->
+            <div class="flex justify-end items-center p-5 border-t bg-gray-50 rounded-b-lg">
+                <p class="text-sm text-gray-500 mr-4">Total de la Orden:</p>
+                <p id="modal-view-total" class="font-bold text-2xl text-gray-900"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear Nueva Orden -->
+    <div id="create-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
+             <!-- Cabecera del Modal -->
+            <div class="flex justify-between items-center p-5 border-b">
+                <h3 class="text-2xl font-semibold">Crear Nueva Orden de Compra</h3>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+             <!-- Cuerpo del Modal con Formulario -->
+            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-4">
+                <div>
+                    <label for="provider" class="block text-sm font-medium text-gray-700">Nombre del Proveedor</label>
+                    <input type="text" id="provider" name="provider" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700">Fecha de Emisión</label>
+                    <input type="date" id="date" name="date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <!-- Sección para agregar items dinámicamente -->
+                <div id="items-container" class="space-y-4 border-t pt-4">
+                    <h4 class="font-semibold text-lg">Items</h4>
+                    <!-- El primer item -->
+                    <div class="item-row grid grid-cols-12 gap-2 items-center">
+                        <input type="text" placeholder="Descripción" class="item-desc col-span-5 border border-gray-300 p-2 rounded-md" required>
+                        <input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border border-gray-300 p-2 rounded-md" required>
+                        <input type="number" placeholder="Precio" min="0" step="0.01" class="item-price col-span-3 border border-gray-300 p-2 rounded-md" required>
+                        <button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:opacity-50" disabled>Eliminar</button>
+                    </div>
+                </div>
+                <button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">
+                    Agregar Otro Item
+                </button>
+            </form>
+             <!-- Pie del Modal -->
+            <div class="p-5 border-t bg-gray-50">
+                <button type="submit" form="create-order-form" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Guardar Orden
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATOS INICIALES (Simulación de una base de datos) ---
+            let orders = [
+                {
+                    id: 'OC-2024-001',
+                    provider: 'TecnoGlobal S.A.',
+                    date: '2024-08-15',
+                    status: 'Aprobado',
+                    items: [
+                        { description: 'Laptop Pro 15"', quantity: 5, price: 1200 },
+                        { description: 'Monitor UltraWide 34"', quantity: 10, price: 450 }
+                    ]
+                },
+                {
+                    id: 'OC-2024-002',
+                    provider: 'Suministros B&C',
+                    date: '2024-08-20',
+                    status: 'Pendiente',
+                    items: [
+                        { description: 'Silla de Oficina Ergonómica', quantity: 20, price: 150 },
+                        { description: 'Escritorio Eléctrico', quantity: 20, price: 300 }
+                    ]
+                },
+                {
+                    id: 'OC-2024-003',
+                    provider: 'Librería Central',
+                    date: '2024-08-22',
+                    status: 'Rechazado',
+                    items: [
+                        { description: 'Caja de Resmas A4 (x10)', quantity: 50, price: 40 },
+                        { description: 'Tóner para Impresora HL-L2360', quantity: 15, price: 75 }
+                    ]
+                }
+            ];
+
+            // --- SELECTORES DE ELEMENTOS DEL DOM ---
+            const ordersGrid = document.getElementById('orders-grid');
+            const addOrderBtn = document.getElementById('add-order-btn');
+            const viewOrderModal = document.getElementById('view-order-modal');
+            const createOrderModal = document.getElementById('create-order-modal');
+            const createOrderForm = document.getElementById('create-order-form');
+            const itemsContainer = document.getElementById('items-container');
+            const addItemBtn = document.getElementById('add-item-btn');
+
+            // --- FUNCIONES DE RENDERIZADO ---
+
+            // Mapeo de colores por estado
+            const statusColors = {
+                'Aprobado': 'bg-green-500',
+                'Pendiente': 'bg-yellow-500',
+                'Rechazado': 'bg-red-500'
+            };
+
+            // Función para formatear moneda
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
+            };
+
+            // Función para calcular el total de una orden
+            const calculateTotal = (items) => {
+                return items.reduce((total, item) => total + (item.quantity * item.price), 0);
+            };
+
+            // Función principal para renderizar todas las órdenes en la grilla
+            const renderOrders = () => {
+                ordersGrid.innerHTML = ''; // Limpiar la grilla antes de renderizar
+                orders.forEach(order => {
+                    const total = calculateTotal(order.items);
+                    const orderCard = document.createElement('div');
+                    orderCard.className = 'bg-white rounded-lg shadow-md p-5 flex flex-col cursor-pointer transition-transform transform hover:-translate-y-1';
+                    orderCard.dataset.orderId = order.id;
+
+                    orderCard.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h2 class="text-lg font-bold text-gray-900">${order.id}</h2>
+                            <span class="text-xs font-bold px-2 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-gray-400'}">${order.status}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">${order.provider}</p>
+                        <div class="mt-auto border-t pt-3">
+                            <p class="text-sm text-gray-500">Total</p>
+                            <p class="text-xl font-semibold">${formatCurrency(total)}</p>
+                        </div>
+                    `;
+                    orderCard.addEventListener('click', () => openViewModal(order.id));
+                    ordersGrid.appendChild(orderCard);
+                });
+            };
+
+            // --- MANEJO DE MODALES ---
+
+            const openModal = (modal) => {
+                const modalContent = modal.querySelector('.transform');
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                }, 10);
+            };
+
+            const closeModal = (modal) => {
+                const modalContent = modal.querySelector('.transform');
+                modal.classList.add('opacity-0');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }, 300);
+            };
+
+            // Abrir el modal de visualización con los datos de la orden
+            const openViewModal = (orderId) => {
+                const order = orders.find(o => o.id === orderId);
+                if (!order) return;
+
+                document.getElementById('modal-view-id').textContent = order.id;
+                document.getElementById('modal-view-provider').textContent = order.provider;
+                document.getElementById('modal-view-date').textContent = new Date(order.date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                const statusBadge = document.getElementById('modal-view-status');
+                statusBadge.textContent = order.status;
+                statusBadge.className = `text-lg font-bold px-3 py-1 rounded-full text-white ${statusColors[order.status]}`;
+
+                const itemsTbody = document.getElementById('modal-view-items');
+                itemsTbody.innerHTML = '';
+                order.items.forEach(item => {
+                    const row = itemsTbody.insertRow();
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">${item.description}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.quantity}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${formatCurrency(item.price)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium">${formatCurrency(item.quantity * item.price)}</td>
+                    `;
+                });
+
+                document.getElementById('modal-view-total').textContent = formatCurrency(calculateTotal(order.items));
+
+                openModal(viewOrderModal);
+            };
+
+            // --- LÓGICA PARA CREAR NUEVA ORDEN ---
+
+            const createItemRow = () => {
+                const div = document.createElement('div');
+                div.className = 'item-row grid grid-cols-12 gap-2 items-center';
+                div.innerHTML = `
+                    <input type="text" placeholder="Descripción" class="item-desc col-span-5 border border-gray-300 p-2 rounded-md" required>
+                    <input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border border-gray-300 p-2 rounded-md" required>
+                    <input type="number" placeholder="Precio" min="0" step="0.01" class="item-price col-span-3 border border-gray-300 p-2 rounded-md" required>
+                    <button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600">Eliminar</button>
+                `;
+                div.querySelector('.remove-item-btn').addEventListener('click', () => {
+                    div.remove();
+                    updateRemoveButtons();
+                });
+                return div;
+            };
+
+            const updateRemoveButtons = () => {
+                const itemRows = itemsContainer.querySelectorAll('.item-row');
+                itemRows.forEach((row, index) => {
+                    const removeBtn = row.querySelector('.remove-item-btn');
+                    removeBtn.disabled = itemRows.length === 1;
+                });
+            };
+
+            addItemBtn.addEventListener('click', () => {
+                itemsContainer.appendChild(createItemRow());
+                updateRemoveButtons();
+            });
+
+            createOrderForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const formData = new FormData(createOrderForm);
+                const newOrder = {
+                    id: `OC-${new Date().getFullYear()}-${String(orders.length + 1).padStart(3, '0')}`,
+                    provider: formData.get('provider'),
+                    date: formData.get('date'),
+                    status: 'Pendiente', // Por defecto, las nuevas órdenes están pendientes
+                    items: []
+                };
+
+                const itemRows = itemsContainer.querySelectorAll('.item-row');
+                itemRows.forEach(row => {
+                    newOrder.items.push({
+                        description: row.querySelector('.item-desc').value,
+                        quantity: parseInt(row.querySelector('.item-qty').value, 10),
+                        price: parseFloat(row.querySelector('.item-price').value)
+                    });
+                });
+                
+                orders.push(newOrder);
+                renderOrders();
+                closeModal(createOrderModal);
+                createOrderForm.reset();
+                // Resetear items a solo uno
+                itemsContainer.innerHTML = '';
+                itemsContainer.appendChild(createItemRow());
+                updateRemoveButtons();
+            });
+
+            // --- EVENT LISTENERS GENERALES ---
+
+            addOrderBtn.addEventListener('click', () => openModal(createOrderModal));
+
+            document.querySelectorAll('.close-modal-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    closeModal(viewOrderModal);
+                    closeModal(createOrderModal);
+                });
+            });
+            
+            document.querySelectorAll('.modal-backdrop').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+            });
+
+
+            // --- INICIALIZACIÓN ---
+            renderOrders();
+        });
+    </script>
+</body>
+</html>
