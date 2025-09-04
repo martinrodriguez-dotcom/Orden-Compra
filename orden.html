@@ -45,73 +45,63 @@
                         <p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p>
                     </section>
                     
-                    <!-- NUEVO: Sección para mostrar al proveedor ganador -->
                     <section id="winner-details-section" class="hidden">
                         <h2 class="text-xl font-semibold mb-3 text-purple-800">Proveedor Asignado</h2>
                         <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-2">
                             <h3 id="winner-provider-name" class="text-2xl font-bold text-purple-900"></h3>
                             <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                                <div>
-                                    <p class="font-semibold text-gray-600">Costo Final (c/flete)</p>
-                                    <p id="winner-provider-cost" class="font-bold"></p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-gray-600">Plazo de Pago</p>
-                                    <p id="winner-provider-term" class="font-bold"></p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-gray-600">Método de Pago</p>
-                                    <p id="winner-provider-method" class="font-bold"></p>
-                                </div>
+                                <div><p class="font-semibold text-gray-600">Costo Final (c/flete)</p><p id="winner-provider-cost" class="font-bold"></p></div>
+                                <div><p class="font-semibold text-gray-600">Plazo de Pago</p><p id="winner-provider-term" class="font-bold"></p></div>
+                                <div><p class="font-semibold text-gray-600">Método de Pago</p><p id="winner-provider-method" class="font-bold"></p></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- NUEVO: Sección para mostrar los detalles del pago -->
+                    <section id="payment-details-section" class="hidden">
+                        <h2 class="text-xl font-semibold mb-3 text-gray-800">Detalles del Pago</h2>
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2">
+                            <h3 id="payment-status" class="text-2xl font-bold text-green-700 flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>PAGADO</h3>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                <div><p class="font-semibold text-gray-600">Monto Pagado</p><p id="payment-amount" class="font-bold"></p></div>
+                                <div><p class="font-semibold text-gray-600">Fecha de Pago</p><p id="payment-date" class="font-bold"></p></div>
+                                <div><p class="font-semibold text-gray-600">ID de Transacción</p><p id="payment-transaction-id" class="font-bold"></p></div>
+                                <div><p class="font-semibold text-gray-600">Notas</p><p id="payment-notes" class="font-bold"></p></div>
                             </div>
                         </div>
                     </section>
 
                     <section>
                         <h2 class="text-xl font-semibold mb-3">Artículos</h2>
-                        <div class="overflow-x-auto border rounded-lg">
-                            <table class="min-w-full">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="p-3 text-left font-semibold text-sm">Descripción</th>
-                                        <th class="p-3 text-center font-semibold text-sm">Cantidad</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="items-table-body"></tbody>
-                            </table>
-                        </div>
+                        <div class="overflow-x-auto border rounded-lg"><table class="min-w-full"><thead><tr class="bg-gray-100"><th class="p-3 text-left font-semibold text-sm">Descripción</th><th class="p-3 text-center font-semibold text-sm">Cantidad</th></tr></thead><tbody id="items-table-body"></tbody></table></div>
                     </section>
                 </div>
                 <div class="md:col-span-1 space-y-8">
-                    <section>
-                        <h2 class="text-xl font-semibold mb-3">Historial</h2>
-                        <div id="history-list" class="space-y-4 border-l-2 ml-2"></div>
-                    </section>
-                    <section id="action-panel-container">
-                        <h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2>
-                        <div id="action-panel" class="bg-gray-50 border rounded-lg p-4"></div>
-                    </section>
+                    <section><h2 class="text-xl font-semibold mb-3">Historial</h2><div id="history-list" class="space-y-4 border-l-2 ml-2"></div></section>
+                    <section id="action-panel-container"><h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2><div id="action-panel" class="bg-gray-50 border rounded-lg p-4"></div></section>
                 </div>
             </main>
         </div>
-        <div id="loading-message" class="text-center py-12">
-            <p class="text-gray-600">Cargando orden...</p>
-        </div>
+        <div id="loading-message" class="text-center py-12"><p class="text-gray-600">Cargando orden...</p></div>
     </div>
 
     <!-- Modales -->
-    <div id="budget-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Cargar Presupuesto</h3><button id="close-budget-modal-btn" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-            <form id="budget-form" class="flex-grow p-6 overflow-y-auto space-y-4"><div><label class="block text-sm font-medium">Nombre del Proveedor</label><input type="text" id="provider-name" required class="mt-1 w-full p-2 border rounded-md"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Precio Presupuestado</label><input type="number" id="budget-base-price" min="0" step="0.01" required class="mt-1 w-full p-2 border rounded-md"></div><div><label class="block text-sm font-medium">Costo de Flete</label><input type="number" id="shipping-cost" min="0" step="0.01" value="0" class="mt-1 w-full p-2 border rounded-md"></div></div><div class="flex items-center"><input type="checkbox" id="has-iva" class="h-4 w-4 rounded"><label for="has-iva" class="ml-2 text-sm">El precio ya contiene IVA (21%)</label></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Plazo de Pago (días)</label><input type="number" id="payment-term" min="0" required value="0" class="mt-1 w-full p-2 border rounded-md"></div><div><label class="block text-sm font-medium">Método de Pago</label><input type="text" id="payment-method" required placeholder="Ej: Transferencia" class="mt-1 w-full p-2 border rounded-md"></div></div><div><label class="block text-sm font-medium">Adjuntar Archivo</label><input type="file" id="budget-file" class="mt-1 w-full text-sm"></div></form>
-            <div class="p-5 border-t bg-gray-50"><button type="submit" form="budget-form" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-bold">Guardar Presupuesto</button></div>
-        </div>
-    </div>
-    <div id="winner-confirmation-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <div id="budget-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0"><div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Cargar Presupuesto</h3><button id="close-budget-modal-btn" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div><form id="budget-form" class="flex-grow p-6 overflow-y-auto space-y-4"><div><label class="block text-sm font-medium">Nombre del Proveedor</label><input type="text" id="provider-name" required class="mt-1 w-full p-2 border rounded-md"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Precio Presupuestado</label><input type="number" id="budget-base-price" min="0" step="0.01" required class="mt-1 w-full p-2 border rounded-md"></div><div><label class="block text-sm font-medium">Costo de Flete</label><input type="number" id="shipping-cost" min="0" step="0.01" value="0" class="mt-1 w-full p-2 border rounded-md"></div></div><div class="flex items-center"><input type="checkbox" id="has-iva" class="h-4 w-4 rounded"><label for="has-iva" class="ml-2 text-sm">El precio ya contiene IVA (21%)</label></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Plazo de Pago (días)</label><input type="number" id="payment-term" min="0" required value="0" class="mt-1 w-full p-2 border rounded-md"></div><div><label class="block text-sm font-medium">Método de Pago</label><input type="text" id="payment-method" required placeholder="Ej: Transferencia" class="mt-1 w-full p-2 border rounded-md"></div></div><div><label class="block text-sm font-medium">Adjuntar Archivo</label><input type="file" id="budget-file" class="mt-1 w-full text-sm"></div></form><div class="p-5 border-t bg-gray-50"><button type="submit" form="budget-form" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-bold">Guardar Presupuesto</button></div></div></div>
+    <div id="winner-confirmation-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden"><div class="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-95 opacity-0"><div class="p-5 border-b bg-green-50"><h3 class="text-2xl font-semibold text-green-800">Proveedor Ganador Recomendado</h3></div><div class="p-6 space-y-4"><h4 id="winner-name" class="text-3xl font-bold text-center"></h4><div class="grid grid-cols-2 gap-4 text-center"><div><p class="text-sm text-gray-500">Costo Final</p><p id="winner-final-cost" class="text-2xl font-bold text-green-700"></p></div><div><p class="text-sm text-gray-500">Valor Presente (Costo Real)</p><p id="winner-present-value" class="text-2xl font-bold text-blue-700"></p></div></div><div><h5 class="font-semibold text-gray-800 mb-2">Justificación de la Elección:</h5><ul id="winner-justification-list" class="list-disc list-inside space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded-md"></ul></div></div><div class="flex justify-end items-center p-5 border-t bg-gray-50 gap-3"><button id="cancel-winner-btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button><button id="confirm-winner-btn" class="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 font-bold">Confirmar y Asignar</button></div></div></div>
+    
+    <!-- NUEVO: Modal para Cargar Pago -->
+    <div id="payment-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="p-5 border-b bg-green-50"><h3 class="text-2xl font-semibold text-green-800">Proveedor Ganador Recomendado</h3></div>
-            <div class="p-6 space-y-4"><h4 id="winner-name" class="text-3xl font-bold text-center"></h4><div class="grid grid-cols-2 gap-4 text-center"><div><p class="text-sm text-gray-500">Costo Final</p><p id="winner-final-cost" class="text-2xl font-bold text-green-700"></p></div><div><p class="text-sm text-gray-500">Valor Presente (Costo Real)</p><p id="winner-present-value" class="text-2xl font-bold text-blue-700"></p></div></div><div><h5 class="font-semibold text-gray-800 mb-2">Justificación de la Elección:</h5><ul id="winner-justification-list" class="list-disc list-inside space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded-md"></ul></div></div>
-            <div class="flex justify-end items-center p-5 border-t bg-gray-50 gap-3"><button id="cancel-winner-btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button><button id="confirm-winner-btn" class="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 font-bold">Confirmar y Asignar</button></div>
+            <div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Registrar Pago</h3><button id="close-payment-modal-btn" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+            <form id="payment-form" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Fecha de Pago</label><input type="date" id="payment-date-input" required class="mt-1 w-full p-2 border rounded-md"></div>
+                    <div><label class="block text-sm font-medium">Monto Pagado</label><input type="number" id="payment-amount-input" min="0" step="0.01" required class="mt-1 w-full p-2 border rounded-md bg-gray-100"></div>
+                </div>
+                <div><label class="block text-sm font-medium">ID de Transacción / Comprobante</label><input type="text" id="payment-id-input" required placeholder="Ej: 0045-12345678" class="mt-1 w-full p-2 border rounded-md"></div>
+                <div><label class="block text-sm font-medium">Notas (Opcional)</label><textarea id="payment-notes-input" rows="2" class="mt-1 w-full p-2 border rounded-md"></textarea></div>
+            </form>
+            <div class="p-5 border-t bg-gray-50"><button type="submit" form="payment-form" class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 font-bold">Confirmar Pago y Finalizar Orden</button></div>
         </div>
     </div>
 
