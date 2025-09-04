@@ -1,6 +1,6 @@
 // Importar funciones de Firebase, incluyendo deleteField
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Configuración de Firebase
@@ -20,7 +20,6 @@ const db = getFirestore(app);
 
 const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Pendiente de Pago': 'bg-orange-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-800' };
 
-// Mapeo de estados a los roles requeridos
 const statusToRoleMap = {
     'Pendiente de Aprobación': 2,
     'Presupuestos Pendientes': 3,
@@ -29,36 +28,47 @@ const statusToRoleMap = {
 };
 
 // --- FUNCIÓN PRINCIPAL ---
-document.addEventListener('DOMContentLoaded', async () => {
-    await signInAnonymously(auth);
-    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    const params = new URLSearchParams(window.location.search);
-    const orderId = params.get('id');
+document.addEventListener('DOMContentLoaded', () => {
     const loadingMessage = document.getElementById('loading-message');
     const orderDetailsContainer = document.getElementById('order-details-container');
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('id');
 
-    if (!currentUser) {
-        loadingMessage.innerHTML = '<h2>Acceso Denegado</h2><p>Por favor, seleccione un usuario en la página principal.</p><a href="index.html" class="text-blue-600">Volver</a>';
-        orderDetailsContainer.classList.add('hidden');
-        return;
-    }
-    
-    if (!orderId) { 
-        loadingMessage.textContent = 'Error: No se especificó un ID de orden.'; 
-        return; 
-    }
+    // VERIFICAR SESIÓN DEL USUARIO
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            // Usuario está logueado, proceder a cargar la orden
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
 
-    const orderRef = doc(db, "purchaseOrders", orderId);
-    onSnapshot(orderRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const order = { id: docSnap.id, ...docSnap.data() };
-            orderDetailsContainer.classList.remove('hidden');
-            loadingMessage.classList.add('hidden');
-            renderOrderDetails(order);
-            renderHistory(order);
-            renderActionPanel(order, currentUser);
+            if (!userDocSnap.exists()) {
+                loadingMessage.textContent = 'Error crítico: El perfil de usuario no existe.';
+                return;
+            }
+            const currentUserData = userDocSnap.data();
+
+            if (!orderId) { 
+                loadingMessage.textContent = 'Error: No se especificó un ID de orden.'; 
+                return; 
+            }
+
+            const orderRef = doc(db, "purchaseOrders", orderId);
+            onSnapshot(orderRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const order = { id: docSnap.id, ...docSnap.data() };
+                    orderDetailsContainer.classList.remove('hidden');
+                    loadingMessage.classList.add('hidden');
+                    renderOrderDetails(order);
+                    renderHistory(order);
+                    renderActionPanel(order, currentUserData);
+                } else {
+                    loadingMessage.textContent = 'Error: Orden no encontrada.';
+                    orderDetailsContainer.classList.add('hidden');
+                }
+            });
         } else {
-            loadingMessage.textContent = 'Error: Orden no encontrada.';
+            // Usuario NO está logueado, denegar acceso
+            loadingMessage.innerHTML = '<h2>Acceso Denegado</h2><p>Debe iniciar sesión para ver esta página.</p><a href="login.html" class="text-blue-600">Ir a Iniciar Sesión</a>';
             orderDetailsContainer.classList.add('hidden');
         }
     });
@@ -114,8 +124,6 @@ function renderHistory(order) {
 function renderActionPanel(order, currentUser) {
     const actionPanel = document.getElementById('action-panel');
     const requiredRole = statusToRoleMap[order.status];
-    
-    // El usuario tiene permiso si tiene el rol específico O si es administrador.
     const userHasPermission = (currentUser.roles && currentUser.roles.includes(requiredRole)) || currentUser.isAdmin;
 
     actionPanel.innerHTML = '';
@@ -244,14 +252,21 @@ async function handleBudgetSubmit(event) {
 
 async function revertToBudgeting() {
     const orderId = new URLSearchParams(window.location.search).get('id');
+    const user = auth.currentUser;
+    if (!user) return;
     if (!confirm('¿Está seguro de que desea rechazar esta selección y volver a la etapa de presupuestos?')) return;
+    
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (!userDocSnap.exists()) return;
+    const currentUserData = userDocSnap.data();
+
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
-        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         await updateDoc(orderRef, {
             status: 'Presupuestos Pendientes',
             proveedorGanador: deleteField(),
-            historial: arrayUnion({ status: 'Selección Rechazada', user: currentUser.name, date: new Date() })
+            historial: arrayUnion({ status: 'Selección Rechazada', user: currentUserData.name, date: new Date() })
         });
     } catch (error) {
         console.error("Error al revertir el estado:", error);
@@ -278,14 +293,21 @@ async function handlePaymentSubmit(event) {
 
 async function updateUserAction(newStatus, details = {}) {
     const orderId = new URLSearchParams(window.location.search).get('id');
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userDocRef = doc(db, "users", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (!userDocSnap.exists()) return;
+    const currentUserData = userDocSnap.data();
+
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
-        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         let historyMessage = newStatus.replace('Pendientes', '').replace('Pendiente ', '');
         
         let updateData = {
             status: newStatus,
-            historial: arrayUnion({ status: historyMessage, user: currentUser.name, date: new Date() })
+            historial: arrayUnion({ status: historyMessage, user: currentUserData.name, date: new Date() })
         };
         
         if (details.proveedorGanador) {
