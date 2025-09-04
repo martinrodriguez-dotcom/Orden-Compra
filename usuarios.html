@@ -43,6 +43,13 @@
                                 <!-- Checkboxes se generarán aquí -->
                             </div>
                         </div>
+                        <!-- NUEVO: Checkbox de Administrador -->
+                        <div class="border-t pt-4">
+                            <div class="flex items-center">
+                                <input id="is-admin" type="checkbox" class="h-4 w-4 rounded text-red-600 focus:ring-red-500">
+                                <label for="is-admin" class="ml-2 text-sm font-bold text-red-700">Es Administrador (Acceso Total)</label>
+                            </div>
+                        </div>
                         <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Crear Usuario</button>
                     </form>
                 </div>
@@ -89,7 +96,6 @@
             5: "5. Registrar Pago"
         };
 
-        // Renderizar checkboxes de roles
         const rolesCheckboxesContainer = document.getElementById('roles-checkboxes');
         rolesCheckboxesContainer.innerHTML = Object.entries(rolesDescription).map(([roleId, desc]) => `
             <div class="flex items-center">
@@ -98,20 +104,24 @@
             </div>
         `).join('');
 
-        // Manejar creación de usuario
         const createUserForm = document.getElementById('create-user-form');
         createUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const userName = document.getElementById('user-name').value;
             const selectedRoles = Array.from(document.querySelectorAll('.role-checkbox:checked')).map(cb => parseInt(cb.value));
+            const isAdmin = document.getElementById('is-admin').checked;
 
-            if (!userName || selectedRoles.length === 0) {
-                alert("El nombre de usuario y al menos un rol son requeridos.");
+            if (!userName) {
+                alert("El nombre de usuario es requerido.");
                 return;
             }
 
             try {
-                await addDoc(usersCollection, { name: userName, roles: selectedRoles });
+                await addDoc(usersCollection, { 
+                    name: userName, 
+                    roles: selectedRoles,
+                    isAdmin: isAdmin 
+                });
                 createUserForm.reset();
             } catch (error) {
                 console.error("Error al crear usuario:", error);
@@ -119,7 +129,6 @@
             }
         });
 
-        // Escuchar y mostrar usuarios en tiempo real
         const userListContainer = document.getElementById('user-list');
         onSnapshot(usersCollection, (snapshot) => {
             if (snapshot.empty) {
@@ -128,15 +137,20 @@
             }
             userListContainer.innerHTML = snapshot.docs.map(doc => {
                 const user = doc.data();
+                const adminBadge = user.isAdmin 
+                    ? `<span class="bg-red-100 text-red-800 text-xs font-bold mr-2 px-2.5 py-0.5 rounded-full">Admin</span>`
+                    : '';
+
                 const userRoles = user.roles.map(roleId => `
                     <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">
                         Etapa ${roleId}
                     </span>
                 `).join('');
+
                 return `
-                    <div class="border rounded-md p-3 flex justify-between items-center">
+                    <div class="border rounded-md p-3 flex justify-between items-center flex-wrap gap-2">
                         <p class="font-bold">${user.name}</p>
-                        <div>${userRoles}</div>
+                        <div>${adminBadge}${userRoles}</div>
                     </div>
                 `;
             }).join('');
