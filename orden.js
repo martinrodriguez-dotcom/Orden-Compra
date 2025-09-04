@@ -20,17 +20,32 @@ const db = getFirestore(app);
 
 const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Pendiente de Pago': 'bg-orange-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-800' };
 
+// Mapeo de estados a los roles requeridos
+const statusToRoleMap = {
+    'Pendiente de Aprobación': 2,
+    'Presupuestos Pendientes': 3,
+    'Pendiente Aprobar Proveedor': 4,
+    'Pendiente de Pago': 5
+};
+
 // --- FUNCIÓN PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
     await signInAnonymously(auth);
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('id');
     const loadingMessage = document.getElementById('loading-message');
     const orderDetailsContainer = document.getElementById('order-details-container');
 
-    if (!orderId) {
-        loadingMessage.textContent = 'Error: No se especificó un ID de orden.';
+    if (!currentUser) {
+        loadingMessage.innerHTML = '<h2>Acceso Denegado</h2><p>Por favor, seleccione un usuario en la página principal.</p><a href="index.html" class="text-blue-600">Volver</a>';
+        orderDetailsContainer.classList.add('hidden');
         return;
+    }
+    
+    if (!orderId) { 
+        loadingMessage.textContent = 'Error: No se especificó un ID de orden.'; 
+        return; 
     }
 
     const orderRef = doc(db, "purchaseOrders", orderId);
@@ -41,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingMessage.classList.add('hidden');
             renderOrderDetails(order);
             renderHistory(order);
-            renderActionPanel(order);
+            renderActionPanel(order, currentUser); // Pasamos el usuario actual
         } else {
             loadingMessage.textContent = 'Error: Orden no encontrada.';
             orderDetailsContainer.classList.add('hidden');
@@ -91,14 +106,28 @@ function renderHistory(order) {
     if (order.historial) {
         order.historial.slice().sort((a, b) => toDateSafe(a.date) - toDateSafe(b.date)).forEach(entry => {
             const date = toDateSafe(entry.date).toLocaleString('es-ES');
-            historyList.innerHTML += `<div class="relative pl-6"><div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div><h4 class="font-semibold">${entry.status}</h4><p class="text-xs text-gray-500">${date}</p></div>`;
+            historyList.innerHTML += `<div class="relative pl-6"><div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div><h4 class="font-semibold">${entry.status}</h4><p class="text-xs text-gray-500">${date} por ${entry.user || 'Sistema'}</p></div>`;
         });
     }
 }
 
-function renderActionPanel(order) {
+function renderActionPanel(order, currentUser) {
     const actionPanel = document.getElementById('action-panel');
-    actionPanel.innerHTML = '';
+    const requiredRole = statusToRoleMap[order.status];
+    const userHasPermission = currentUser.roles.includes(requiredRole);
+
+    actionPanel.innerHTML = ''; // Limpiar siempre
+
+    if (requiredRole && !userHasPermission) {
+        actionPanel.innerHTML = `
+            <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-yellow-500 mx-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" /></svg>
+                <p class="text-sm font-semibold mt-2">Acción Bloqueada</p>
+                <p class="text-xs text-gray-600">No tiene los permisos necesarios (Rol Etapa ${requiredRole}) para esta acción.</p>
+            </div>`;
+        return;
+    }
+
     switch (order.status) {
         case 'Pendiente de Aprobación':
             actionPanel.innerHTML = `<p class="text-sm mb-4">La orden requiere aprobación.</p><div class="flex flex-col gap-2"><button id="approve-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar</button><button id="reject-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600">Rechazar</button></div>`;
@@ -128,7 +157,8 @@ function renderActionPanel(order) {
             });
             break;
         case 'Finalizada':
-             actionPanel.innerHTML = `<div class="text-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500 mx-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg><p class="text-sm font-semibold mt-2">Esta orden de compra ha sido completada y pagada.</p></div>`;
+        case 'Rechazada':
+             actionPanel.innerHTML = `<div class="text-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 ${order.status === 'Finalizada' ? 'text-green-500' : 'text-red-500'} mx-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg><p class="text-sm font-semibold mt-2">Esta orden de compra ha sido ${order.status.toLowerCase()}.</p></div>`;
             break;
         default:
             actionPanel.innerHTML = `<p class="text-sm">No hay acciones para el estado: <strong>${order.status}</strong>.</p>`;
@@ -151,8 +181,6 @@ function renderBudgetList(order) {
         if (winnerBtn) winnerBtn.disabled = true;
     }
 }
-
-// --- LÓGICA Y MANEJADORES DE EVENTOS ---
 
 function handleSelectWinner(order) {
     if (!order.presupuestos || order.presupuestos.length === 0) return;
@@ -217,10 +245,11 @@ async function revertToBudgeting() {
     if (!confirm('¿Está seguro de que desea rechazar esta selección y volver a la etapa de presupuestos?')) return;
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         await updateDoc(orderRef, {
             status: 'Presupuestos Pendientes',
             proveedorGanador: deleteField(),
-            historial: arrayUnion({ status: 'Selección Rechazada', date: new Date() })
+            historial: arrayUnion({ status: 'Selección Rechazada', user: currentUser.name, date: new Date() })
         });
     } catch (error) {
         console.error("Error al revertir el estado:", error);
@@ -231,21 +260,17 @@ async function revertToBudgeting() {
 async function handlePaymentSubmit(event) {
     event.preventDefault();
     const orderId = new URLSearchParams(window.location.search).get('id');
-
     const paymentDetails = {
         date: document.getElementById('payment-date-input').value,
         amount: parseFloat(document.getElementById('payment-amount-input').value),
         transactionId: document.getElementById('payment-id-input').value,
         notes: document.getElementById('payment-notes-input').value,
     };
-
     if (!paymentDetails.date || !paymentDetails.amount || !paymentDetails.transactionId) {
         alert("Por favor, complete todos los campos de pago requeridos.");
         return;
     }
-
     await updateUserAction('Finalizada', { paymentDetails: paymentDetails });
-
     closeModal(document.getElementById('payment-modal'));
 }
 
@@ -253,11 +278,12 @@ async function updateUserAction(newStatus, details = {}) {
     const orderId = new URLSearchParams(window.location.search).get('id');
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
         let historyMessage = newStatus.replace('Pendientes', '').replace('Pendiente ', '');
         
         let updateData = {
             status: newStatus,
-            historial: arrayUnion({ status: historyMessage, date: new Date() })
+            historial: arrayUnion({ status: historyMessage, user: currentUser.name, date: new Date() })
         };
         
         if (details.proveedorGanador) {
@@ -274,7 +300,6 @@ async function updateUserAction(newStatus, details = {}) {
     }
 }
 
-// --- HELPERS DE UI ---
 function formatCurrency(value) { return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value); }
 
 const budgetModal = document.getElementById('budget-modal');
