@@ -28,89 +28,79 @@
 
         <!-- Grilla de Órdenes de Compra -->
         <main id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <!-- Las tarjetas de órdenes de compra se insertarán aquí dinámicamente -->
+            <!-- Las tarjetas se insertarán aquí -->
         </main>
     </div>
 
-    <!-- Botón Flotante para Agregar Nueva Orden -->
+    <!-- Botón Flotante -->
     <button id="add-order-btn" class="fixed bottom-8 left-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
     </button>
 
-    <!-- Modal para VISTA RÁPIDA de la Orden -->
+    <!-- Modal para VISTA RÁPIDA (Sin total) -->
     <div id="view-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md flex flex-col transform transition-all scale-95 opacity-0">
-            <!-- Cabecera del Modal -->
             <div class="flex justify-between items-center p-5 border-b">
                 <h3 class="text-2xl font-semibold">Resumen de Orden: <span id="modal-view-id" class="text-blue-600"></span></h3>
-                <button class="close-modal-btn text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
-            <!-- Cuerpo del Modal -->
             <div class="p-6 space-y-4">
                 <div>
-                    <p class="text-sm text-gray-500">Proveedor</p>
-                    <p id="modal-view-provider" class="font-medium text-lg"></p>
+                    <p class="text-sm text-gray-500">Nombre de la Orden</p>
+                    <p id="modal-view-name" class="font-medium text-lg"></p>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Fecha de Emisión</p>
-                    <p id="modal-view-date" class="font-medium text-lg"></p>
+                    <p class="text-sm text-gray-500">Justificación</p>
+                    <p id="modal-view-justification" class="font-normal text-base bg-gray-50 p-2 rounded-md"></p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500">Estado</p>
                     <span id="modal-view-status" class="text-lg font-bold px-3 py-1 rounded-full text-white"></span>
                 </div>
-                 <div>
-                    <p class="text-sm text-gray-500">Monto Total</p>
-                    <p id="modal-view-total" class="font-bold text-2xl text-gray-900"></p>
-                </div>
             </div>
-             <!-- Pie del Modal -->
             <div class="flex justify-end items-center p-5 border-t bg-gray-50 rounded-b-lg gap-3">
                 <button class="close-modal-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cerrar</button>
-                <a id="manage-order-link" href="#" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
-                    Gestionar Orden
-                </a>
+                <a id="manage-order-link" href="#" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Gestionar Orden</a>
             </div>
         </div>
     </div>
 
-    <!-- Modal para Crear Nueva Orden -->
+    <!-- Modal para Crear Nueva Orden (SIN PRECIO) -->
     <div id="create-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
             <div class="flex justify-between items-center p-5 border-b">
-                <h3 class="text-2xl font-semibold">Crear Nueva Orden</h3>
+                <h3 class="text-2xl font-semibold">Nueva Orden de Compra</h3>
                 <button class="close-modal-btn text-gray-400 hover:text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-4">
+            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-6">
                 <div>
-                    <label for="provider" class="block text-sm font-medium text-gray-700">Proveedor</label>
-                    <input type="text" id="provider" name="provider" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <label for="orderName" class="block text-sm font-medium text-gray-700">Nombre de la orden de compra</label>
+                    <input type="text" id="orderName" name="orderName" placeholder="Ej: Compra de insumos de oficina Q3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <div>
-                    <label for="date" class="block text-sm font-medium text-gray-700">Fecha</label>
-                    <input type="date" id="date" name="date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                </div>
+                
                 <div id="items-container" class="space-y-4 border-t pt-4">
-                    <h4 class="font-semibold text-lg">Items</h4>
+                    <h4 class="font-semibold text-lg">Artículos</h4>
                     <div class="item-row grid grid-cols-12 gap-2 items-center">
-                        <input type="text" placeholder="Descripción" class="item-desc col-span-5 border p-2 rounded-md" required>
+                        <input type="text" placeholder="Descripción del artículo" class="item-desc col-span-8 border p-2 rounded-md" required>
                         <input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required>
-                        <input type="number" placeholder="Precio" min="0" step="0.01" class="item-price col-span-3 border p-2 rounded-md" required>
                         <button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:opacity-50" disabled>Eliminar</button>
                     </div>
                 </div>
-                <button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Agregar Otro Item</button>
+                <button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Agregar Otro Artículo</button>
+
+                <div>
+                    <label for="justification" class="block text-sm font-medium text-gray-700">Justificación (el porqué)</label>
+                    <textarea id="justification" name="justification" rows="4" placeholder="Ej: Renovación de stock para el próximo trimestre." required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
             </form>
             <div class="p-5 border-t bg-gray-50">
-                <button type="submit" form="create-order-form" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700">Guardar Orden</button>
+                <button type="submit" form="create-order-form" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-bold">
+                    Cargar Orden
+                </button>
             </div>
         </div>
     </div>
@@ -118,20 +108,19 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- DATOS (Simulación de una base de datos con localStorage) ---
+            // --- DATOS (localStorage) ---
             const getOrders = () => JSON.parse(localStorage.getItem('purchaseOrders')) || [];
             const saveOrders = (orders) => localStorage.setItem('purchaseOrders', JSON.stringify(orders));
 
-            // Cargar datos iniciales si no existen en localStorage
+            // Cargar datos iniciales con la nueva estructura (sin precios)
             if (!localStorage.getItem('purchaseOrders')) {
                 saveOrders([
-                    { id: 'OC-2024-001', provider: 'TecnoGlobal S.A.', date: '2024-08-15', status: 'Aprobado', items: [ { description: 'Laptop Pro 15"', quantity: 5, price: 1200 }, { description: 'Monitor UltraWide 34"', quantity: 10, price: 450 } ] },
-                    { id: 'OC-2024-002', provider: 'Suministros B&C', date: '2024-08-20', status: 'Pendiente', items: [ { description: 'Silla de Oficina Ergonómica', quantity: 20, price: 150 }, { description: 'Escritorio Eléctrico', quantity: 20, price: 300 } ] },
-                    { id: 'OC-2024-003', provider: 'Librería Central', date: '2024-08-22', status: 'Rechazado', items: [ { description: 'Caja de Resmas A4 (x10)', quantity: 50, price: 40 }, { description: 'Tóner para Impresora HL-L2360', quantity: 15, price: 75 } ] }
+                    { id: 'OC-2024-001', name: 'Insumos de Oficina Q3', justification: 'Stock para el tercer trimestre.', status: 'Aprobado', items: [ { description: 'Resmas de Papel A4', quantity: 50 }, { description: 'Tóner para Impresora XP-4100', quantity: 5 } ] },
+                    { id: 'OC-2024-002', name: 'Equipamiento nuevo para Marketing', justification: 'Ampliación del equipo de diseño.', status: 'Pendiente', items: [ { description: 'Monitor 4K 27"', quantity: 2 }, { description: 'Tableta Gráfica Pro', quantity: 2 } ] },
                 ]);
             }
 
-            // --- SELECTORES DE ELEMENTOS DEL DOM ---
+            // --- SELECTORES DEL DOM ---
             const ordersGrid = document.getElementById('orders-grid');
             const addOrderBtn = document.getElementById('add-order-btn');
             const viewOrderModal = document.getElementById('view-order-modal');
@@ -142,15 +131,12 @@
 
             // --- FUNCIONES AUXILIARES ---
             const statusColors = { 'Aprobado': 'bg-green-500', 'Pendiente': 'bg-yellow-500', 'Rechazado': 'bg-red-500' };
-            const formatCurrency = (amount) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(amount);
-            const calculateTotal = (items) => items.reduce((total, item) => total + (item.quantity * item.price), 0);
-
-            // --- RENDERIZADO DE LA GRILLA ---
+            
+            // --- RENDERIZADO (Sin total en la tarjeta) ---
             const renderOrders = () => {
                 const orders = getOrders();
                 ordersGrid.innerHTML = '';
                 orders.forEach(order => {
-                    const total = calculateTotal(order.items);
                     const orderCard = document.createElement('div');
                     orderCard.className = 'bg-white rounded-lg shadow-md p-5 flex flex-col cursor-pointer transition-transform transform hover:-translate-y-1';
                     orderCard.dataset.orderId = order.id;
@@ -159,10 +145,9 @@
                             <h2 class="text-lg font-bold text-gray-900">${order.id}</h2>
                             <span class="text-xs font-bold px-2 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-gray-400'}">${order.status}</span>
                         </div>
-                        <p class="text-sm text-gray-600 mb-4">${order.provider}</p>
+                        <p class="text-sm text-gray-600 mb-4 font-semibold">${order.name}</p>
                         <div class="mt-auto border-t pt-3">
-                            <p class="text-sm text-gray-500">Total</p>
-                            <p class="text-xl font-semibold">${formatCurrency(total)}</p>
+                            <p class="text-sm text-gray-500">Artículos: <strong>${order.items.length}</strong></p>
                         </div>
                     `;
                     orderCard.addEventListener('click', () => openViewModal(order.id));
@@ -190,25 +175,21 @@
                     document.body.style.overflow = '';
                 }, 300);
             };
-
+            
             const openViewModal = (orderId) => {
                 const orders = getOrders();
                 const order = orders.find(o => o.id === orderId);
                 if (!order) return;
 
                 document.getElementById('modal-view-id').textContent = order.id;
-                document.getElementById('modal-view-provider').textContent = order.provider;
-                document.getElementById('modal-view-date').textContent = new Date(order.date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('modal-view-name').textContent = order.name;
+                document.getElementById('modal-view-justification').textContent = order.justification;
                 
                 const statusBadge = document.getElementById('modal-view-status');
                 statusBadge.textContent = order.status;
                 statusBadge.className = `text-lg font-bold px-3 py-1 rounded-full text-white ${statusColors[order.status]}`;
                 
-                document.getElementById('modal-view-total').textContent = formatCurrency(calculateTotal(order.items));
-
-                // Configurar el enlace para ir a la página de gestión
                 document.getElementById('manage-order-link').href = `orden.html?id=${encodeURIComponent(order.id)}`;
-
                 openModal(viewOrderModal);
             };
 
@@ -217,9 +198,8 @@
                 const div = document.createElement('div');
                 div.className = 'item-row grid grid-cols-12 gap-2 items-center';
                 div.innerHTML = `
-                    <input type="text" placeholder="Descripción" class="item-desc col-span-5 border p-2 rounded-md" required>
+                    <input type="text" placeholder="Descripción del artículo" class="item-desc col-span-8 border p-2 rounded-md" required>
                     <input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required>
-                    <input type="number" placeholder="Precio" min="0" step="0.01" class="item-price col-span-3 border p-2 rounded-md" required>
                     <button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600">Eliminar</button>
                 `;
                 div.querySelector('.remove-item-btn').addEventListener('click', () => { div.remove(); updateRemoveButtons(); });
@@ -228,17 +208,12 @@
 
             const updateRemoveButtons = () => {
                 const itemRows = itemsContainer.querySelectorAll('.item-row');
-                itemRows.forEach((row) => { row.querySelector('.remove-item-btn').disabled = itemRows.length === 1; });
-                // Habilitar el primer botón si solo hay una fila
-                if (itemRows.length === 1) {
-                    itemRows[0].querySelector('.remove-item-btn').disabled = true;
-                }
+                itemRows.forEach((row) => {
+                    row.querySelector('.remove-item-btn').disabled = itemRows.length === 1;
+                });
             };
 
-            addItemBtn.addEventListener('click', () => { 
-                itemsContainer.appendChild(createItemRow()); 
-                updateRemoveButtons(); 
-            });
+            addItemBtn.addEventListener('click', () => { itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); });
 
             createOrderForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -246,8 +221,8 @@
                 const formData = new FormData(createOrderForm);
                 const newOrder = {
                     id: `OC-${new Date().getFullYear()}-${String(orders.length + 1).padStart(3, '0')}`,
-                    provider: formData.get('provider'),
-                    date: formData.get('date'),
+                    name: formData.get('orderName'),
+                    justification: formData.get('justification'),
                     status: 'Pendiente',
                     items: []
                 };
@@ -255,8 +230,8 @@
                 itemsContainer.querySelectorAll('.item-row').forEach(row => {
                     newOrder.items.push({
                         description: row.querySelector('.item-desc').value,
-                        quantity: parseInt(row.querySelector('.item-qty').value, 10),
-                        price: parseFloat(row.querySelector('.item-price').value)
+                        quantity: parseInt(row.querySelector('.item-qty').value, 10)
+                        // No hay precio
                     });
                 });
                 
@@ -264,10 +239,6 @@
                 saveOrders(orders);
                 renderOrders();
                 closeModal(createOrderModal);
-                createOrderForm.reset();
-                itemsContainer.innerHTML = '';
-                itemsContainer.appendChild(createItemRow());
-                updateRemoveButtons();
             });
 
             // --- EVENT LISTENERS GENERALES ---
@@ -290,9 +261,7 @@
 
             // --- INICIALIZACIÓN ---
             renderOrders();
-            updateRemoveButtons(); // Asegurarse que el botón de eliminar del primer item esté deshabilitado al inicio
         });
     </script>
 </body>
 </html>
-
