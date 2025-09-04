@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <div class="mb-6">
+            <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                Volver al Panel Principal
+            </a>
+        </div>
+        
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Mi Perfil</h1>
+            <p class="text-gray-600 mt-1">Aquí puedes ver y actualizar tu información.</p>
+        </header>
+
+        <div id="profile-container" class="grid grid-cols-1 md:grid-cols-3 gap-8 hidden">
+            <!-- Columna de Información -->
+            <div class="md:col-span-1">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold mb-4">Información de Usuario</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Nombre</p>
+                            <p id="profile-name" class="text-lg font-bold"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Correo Electrónico</p>
+                            <p id="profile-email" class="text-lg"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Roles Asignados</p>
+                            <div id="profile-roles" class="flex flex-wrap gap-2 mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna de Acciones -->
+            <div class="md:col-span-2 space-y-8">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-semibold mb-4">Actualizar Nombre</h2>
+                    <form id="update-name-form" class="space-y-4">
+                        <div>
+                            <label for="new-name" class="block text-sm font-medium text-gray-700">Nuevo Nombre</p>
+                            <input type="text" id="new-name" required class="mt-1 w-full p-2 border rounded-md">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Guardar Nombre</button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                     <h2 class="text-2xl font-semibold mb-4">Cambiar Contraseña</h2>
+                    <form id="update-password-form" class="space-y-4">
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-gray-700">Contraseña Actual</p>
+                            <input type="password" id="current-password" required class="mt-1 w-full p-2 border rounded-md">
+                        </div>
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700">Nueva Contraseña</p>
+                            <input type="password" id="new-password" required class="mt-1 w-full p-2 border rounded-md">
+                        </div>
+                        <button type="submit" class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-md hover:bg-orange-600">Cambiar Contraseña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading-message" class="text-center py-12">
+            <p>Cargando perfil...</p>
+        </div>
+        <div id="feedback-message" class="mt-4 p-4 text-center rounded-md hidden"></div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBNnUbg_LL6w4dZxqSA3vwCb7e1AHmM1vY", authDomain: "orden-compra-d803f.firebaseapp.com", projectId: "orden-compra-d803f", storageBucket: "orden-compra-d803f.appspot.com", messagingSenderId: "441828854057", appId: "1:441828854057:web:3037aabc9d02e6e27fcf38" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const rolesDescription = { 1: "Cargar Orden", 2: "Aprobar Orden", 3: "Cargar Presupuestos", 4: "Aprobar Proveedor", 5: "Registrar Pago" };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    displayUserData(userData);
+                    document.getElementById('profile-container').classList.remove('hidden');
+                    document.getElementById('loading-message').classList.add('hidden');
+                } else {
+                    document.getElementById('loading-message').textContent = "Error: Perfil no encontrado.";
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function displayUserData(userData) {
+            document.getElementById('profile-name').textContent = userData.name;
+            document.getElementById('profile-email').textContent = userData.email;
+            document.getElementById('new-name').value = userData.name;
+
+            const rolesContainer = document.getElementById('profile-roles');
+            rolesContainer.innerHTML = '';
+            if (userData.isAdmin) {
+                rolesContainer.innerHTML = '<span class="bg-red-100 text-red-800 text-sm font-bold mr-2 px-2.5 py-0.5 rounded-full">Administrador</span>';
+            }
+            userData.roles.forEach(roleId => {
+                rolesContainer.innerHTML += `<span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${rolesDescription[roleId] || `Rol ${roleId}`}</span>`;
+            });
+        }
+        
+        const feedbackMessage = document.getElementById('feedback-message');
+        function showFeedback(message, isError = false) {
+            feedbackMessage.textContent = message;
+            feedbackMessage.className = `mt-4 p-4 text-center rounded-md ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+            feedbackMessage.classList.remove('hidden');
+            setTimeout(() => feedbackMessage.classList.add('hidden'), 4000);
+        }
+
+        // Formulario para actualizar nombre
+        document.getElementById('update-name-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = document.getElementById('new-name').value;
+            const user = auth.currentUser;
+            if (!user || !newName) return;
+
+            const userDocRef = doc(db, "users", user.uid);
+            try {
+                await updateDoc(userDocRef, { name: newName });
+                await updateProfile(user, { displayName: newName });
+                showFeedback("Nombre actualizado con éxito.");
+                document.getElementById('profile-name').textContent = newName;
+            } catch (error) {
+                console.error("Error al actualizar nombre:", error);
+                showFeedback("No se pudo actualizar el nombre.", true);
+            }
+        });
+
+        // Formulario para cambiar contraseña
+        document.getElementById('update-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const user = auth.currentUser;
+            if (!user || !currentPassword || !newPassword) return;
+
+            const credential = EmailAuthProvider.credential(user.email, currentPassword);
+            
+            try {
+                await reauthenticateWithCredential(user, credential);
+                await updatePassword(user, newPassword);
+                showFeedback("Contraseña cambiada con éxito.");
+                e.target.reset(); // Limpiar el formulario
+            } catch (error) {
+                console.error("Error al cambiar contraseña:", error.code);
+                let message = "No se pudo cambiar la contraseña.";
+                if (error.code === 'auth/wrong-password') {
+                    message = "La contraseña actual es incorrecta.";
+                } else if (error.code === 'auth/weak-password') {
+                    message = "La nueva contraseña es demasiado débil.";
+                }
+                showFeedback(message, true);
+            }
+        });
+
+    </script>
+</body>
+</html>
