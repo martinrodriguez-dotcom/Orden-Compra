@@ -8,175 +8,140 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-        .modal-backdrop { transition: opacity 0.3s ease-in-out; }
-    </style>
+    <style> body { font-family: 'Inter', sans-serif; } .modal-backdrop { transition: opacity 0.3s ease-in-out; } </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Contenedor Principal -->
     <div class="container mx-auto p-4 md:p-8">
-        <header class="mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Panel de Órdenes de Compra</h1>
-            <p class="text-gray-600 mt-1">Selecciona una orden para ver un resumen o gestionarla.</p>
-        </header>
-        <main id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></main>
+        <header class="mb-8"><h1 class="text-3xl md:text-4xl font-bold text-gray-900">Panel de Órdenes de Compra</h1><p class="text-gray-600 mt-1">Selecciona una orden para ver un resumen o gestionarla.</p></header>
+        <main id="orders-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"><p id="loading-message" class="col-span-full text-center text-gray-500">Cargando órdenes...</p></main>
     </div>
 
-    <!-- Botón Flotante -->
-    <button id="add-order-btn" class="fixed bottom-8 left-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-    </button>
+    <button id="add-order-btn" class="fixed bottom-8 left-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></button>
 
-    <!-- Modal para VISTA RÁPIDA -->
     <div id="view-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-md flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="flex justify-between items-center p-5 border-b">
-                <h3 class="text-2xl font-semibold">Resumen de Orden: <span id="modal-view-id" class="text-blue-600"></span></h3>
-                <button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div><p class="text-sm text-gray-500">Nombre de la Orden</p><p id="modal-view-name" class="font-medium text-lg"></p></div>
-                <div><p class="text-sm text-gray-500">Justificación</p><p id="modal-view-justification" class="font-normal text-base bg-gray-50 p-2 rounded-md"></p></div>
-                <div><p class="text-sm text-gray-500">Estado</p><span id="modal-view-status" class="text-lg font-bold px-3 py-1 rounded-full text-white"></span></div>
-            </div>
-            <div class="flex justify-end items-center p-5 border-t bg-gray-50 rounded-b-lg gap-3">
-                <button class="close-modal-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cerrar</button>
-                <a id="manage-order-link" href="#" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Gestionar Orden</a>
-            </div>
+            <div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Resumen de Orden: <span id="modal-view-id" class="text-blue-600"></span></h3><button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+            <div class="p-6 space-y-4"><div><p class="text-sm text-gray-500">Nombre</p><p id="modal-view-name" class="font-medium text-lg"></p></div><div><p class="text-sm text-gray-500">Justificación</p><p id="modal-view-justification" class="font-normal text-base bg-gray-50 p-2 rounded-md"></p></div><div><p class="text-sm text-gray-500">Estado</p><span id="modal-view-status" class="text-lg font-bold px-3 py-1 rounded-full text-white"></span></div></div>
+            <div class="flex justify-end items-center p-5 border-t bg-gray-50 rounded-b-lg gap-3"><button class="close-modal-btn bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cerrar</button><a id="manage-order-link" href="#" class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">Gestionar Orden</a></div>
         </div>
     </div>
 
-    <!-- Modal para Crear Nueva Orden -->
     <div id="create-order-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="flex justify-between items-center p-5 border-b">
-                <h3 class="text-2xl font-semibold">Nueva Orden de Compra</h3>
-                <button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            </div>
-            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-6">
-                <div><label for="orderName" class="block text-sm font-medium text-gray-700">Nombre de la orden de compra</label><input type="text" id="orderName" name="orderName" placeholder="Ej: Compra de insumos de oficina Q3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></div>
-                <div id="items-container" class="space-y-4 border-t pt-4">
-                    <h4 class="font-semibold text-lg">Artículos</h4>
-                    <div class="item-row grid grid-cols-12 gap-2 items-center"><input type="text" placeholder="Descripción del artículo" class="item-desc col-span-8 border p-2 rounded-md" required><input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required><button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:opacity-50" disabled>Eliminar</button></div>
-                </div>
-                <button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Agregar Otro Artículo</button>
-                <div><label for="justification" class="block text-sm font-medium text-gray-700">Justificación (el porqué)</label><textarea id="justification" name="justification" rows="4" placeholder="Ej: Renovación de stock para el próximo trimestre." required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea></div>
-            </form>
+            <div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Nueva Orden de Compra</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+            <form id="create-order-form" class="flex-grow p-6 overflow-y-auto space-y-6"><div><label for="orderName" class="block text-sm font-medium text-gray-700">Nombre de la orden</label><input type="text" id="orderName" name="orderName" placeholder="Ej: Compra de insumos Q3" required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500"></div><div id="items-container" class="space-y-4 border-t pt-4"><h4 class="font-semibold text-lg">Artículos</h4><div class="item-row grid grid-cols-12 gap-2 items-center"><input type="text" placeholder="Descripción" class="item-desc col-span-8 border p-2 rounded-md" required><input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required><button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 disabled:opacity-50" disabled>Eliminar</button></div></div><button type="button" id="add-item-btn" class="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Agregar Artículo</button><div><label for="justification" class="block text-sm font-medium text-gray-700">Justificación</label><textarea id="justification" name="justification" rows="4" placeholder="Ej: Renovación de stock." required class="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500"></textarea></div></form>
             <div class="p-5 border-t bg-gray-50"><button type="submit" form="create-order-form" class="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 font-bold">Cargar Orden</button></div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const getOrders = () => JSON.parse(localStorage.getItem('purchaseOrders')) || [];
-            const saveOrders = (orders) => localStorage.setItem('purchaseOrders', JSON.stringify(orders));
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-            if (!localStorage.getItem('purchaseOrders')) {
-                saveOrders([
-                    { id: 'OC-2024-001', name: 'Insumos de Oficina Q3', justification: 'Stock para el tercer trimestre.', status: 'Presupuestos Pendientes', items: [ { description: 'Resmas de Papel A4', quantity: 50 }, { description: 'Tóner para Impresora XP-4100', quantity: 5 } ], historial: [{status: 'Cargada', date: new Date().toISOString()}, {status: 'Aprobada', date: new Date().toISOString()}]},
-                    { id: 'OC-2024-002', name: 'Equipamiento nuevo para Marketing', justification: 'Ampliación del equipo de diseño.', status: 'Pendiente de Aprobación', items: [ { description: 'Monitor 4K 27"', quantity: 2 }, { description: 'Tableta Gráfica Pro', quantity: 2 } ], historial: [{status: 'Cargada', date: new Date().toISOString()}]},
-                ]);
-            }
+        // --- FIREBASE SETUP ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNnUbg_LL6w4dZxqSA3vwCb7e1AHmM1vY",
+            authDomain: "orden-compra-d803f.firebaseapp.com",
+            projectId: "orden-compra-d803f",
+            storageBucket: "orden-compra-d803f.appspot.com",
+            messagingSenderId: "441828854057",
+            appId: "1:441828854057:web:3037aabc9d02e6e27fcf38"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        signInAnonymously(auth).catch((error) => console.error("Anonymous sign-in failed:", error));
+        
+        let allOrders = []; 
+        const ordersGrid = document.getElementById('orders-grid');
+        const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
 
-            const ordersGrid = document.getElementById('orders-grid');
-            const addOrderBtn = document.getElementById('add-order-btn');
-            const createOrderModal = document.getElementById('create-order-modal');
-            const createOrderForm = document.getElementById('create-order-form');
-            const itemsContainer = document.getElementById('items-container');
-            const addItemBtn = document.getElementById('add-item-btn');
-
-            const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
-
-            const renderOrders = () => {
-                const orders = getOrders();
-                ordersGrid.innerHTML = '';
-                orders.forEach(order => {
-                    const orderCard = document.createElement('div');
-                    orderCard.className = 'bg-white rounded-lg shadow-md p-5 flex flex-col cursor-pointer transition-transform transform hover:-translate-y-1';
-                    orderCard.dataset.orderId = order.id;
-                    orderCard.innerHTML = `<div class="flex justify-between items-start mb-2"><h2 class="text-lg font-bold text-gray-900">${order.id}</h2><span class="text-xs font-bold px-2 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}">${order.status}</span></div><p class="text-sm text-gray-600 mb-4 font-semibold">${order.name}</p><div class="mt-auto border-t pt-3"><p class="text-sm text-gray-500">Artículos: <strong>${order.items.length}</strong></p></div>`;
-                    orderCard.addEventListener('click', () => openViewModal(order.id));
-                    ordersGrid.appendChild(orderCard);
-                });
-            };
-
-            const openModal = (modal) => {
-                const modalContent = modal.querySelector('.transform');
-                modal.classList.remove('hidden'); document.body.style.overflow = 'hidden';
-                setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95', 'opacity-0'); }, 10);
-            };
-
-            const closeModal = (modal) => {
-                const modalContent = modal.querySelector('.transform');
-                modal.classList.add('opacity-0'); modalContent.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
-            };
-            
-            const openViewModal = (orderId) => {
-                const orders = getOrders();
-                const order = orders.find(o => o.id === orderId);
-                if (!order) return;
-                const viewOrderModal = document.getElementById('view-order-modal');
-                document.getElementById('modal-view-id').textContent = order.id;
-                document.getElementById('modal-view-name').textContent = order.name;
-                document.getElementById('modal-view-justification').textContent = order.justification;
-                const statusBadge = document.getElementById('modal-view-status');
-                statusBadge.textContent = order.status;
-                statusBadge.className = `text-lg font-bold px-3 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}`;
-                document.getElementById('manage-order-link').href = `orden.html?id=${encodeURIComponent(order.id)}`;
-                openModal(viewOrderModal);
-            };
-
-            const createItemRow = () => {
-                const div = document.createElement('div');
-                div.className = 'item-row grid grid-cols-12 gap-2 items-center';
-                div.innerHTML = `<input type="text" placeholder="Descripción del artículo" class="item-desc col-span-8 border p-2 rounded-md" required><input type="number" placeholder="Cant." min="1" class="item-qty col-span-2 border p-2 rounded-md" required><button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600">Eliminar</button>`;
-                div.querySelector('.remove-item-btn').addEventListener('click', () => { div.remove(); updateRemoveButtons(); });
-                return div;
-            };
-
-            const updateRemoveButtons = () => {
-                const itemRows = itemsContainer.querySelectorAll('.item-row');
-                itemRows.forEach((row) => { row.querySelector('.remove-item-btn').disabled = itemRows.length === 1; });
-            };
-
-            addItemBtn.addEventListener('click', () => { itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); });
-
-            createOrderForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const orders = getOrders();
-                const formData = new FormData(createOrderForm);
-                const newOrder = {
-                    id: `OC-${new Date().getFullYear()}-${String(orders.length + 1).padStart(3, '0')}`,
-                    name: formData.get('orderName'),
-                    justification: formData.get('justification'),
-                    status: 'Pendiente de Aprobación', // ESTADO INICIAL
-                    items: [],
-                    historial: [{ status: 'Cargada', date: new Date().toISOString() }] // Inicia el historial
-                };
-                itemsContainer.querySelectorAll('.item-row').forEach(row => {
-                    newOrder.items.push({ description: row.querySelector('.item-desc').value, quantity: parseInt(row.querySelector('.item-qty').value, 10) });
-                });
-                orders.push(newOrder);
-                saveOrders(orders);
-                renderOrders();
-                closeModal(createOrderModal);
-            });
-
-            addOrderBtn.addEventListener('click', () => {
-                createOrderForm.reset(); itemsContainer.innerHTML = ''; itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); openModal(createOrderModal);
-            });
-            document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', () => { closeModal(document.getElementById('view-order-modal')); closeModal(createOrderModal); }));
-            document.querySelectorAll('.modal-backdrop').forEach(modal => modal.addEventListener('click', (e) => { if (e.target === modal) { closeModal(modal); } }));
-
+        // --- FIREBASE REAL-TIME LISTENER ---
+        const ordersCollection = collection(db, "purchaseOrders");
+        const q = query(ordersCollection, orderBy("createdAt", "desc")); // Ordenar por fecha de creación descendente
+        onSnapshot(q, (snapshot) => {
+            allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderOrders();
         });
+
+        const renderOrders = () => { /* ... (código sin cambios) ... */
+            ordersGrid.innerHTML = '';
+            if (allOrders.length === 0) {
+                const loadingMsg = document.getElementById('loading-message');
+                if (loadingMsg) {
+                    loadingMsg.textContent = 'No hay órdenes de compra. ¡Crea la primera!';
+                    ordersGrid.appendChild(loadingMsg);
+                }
+                return;
+            }
+            allOrders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'bg-white rounded-lg shadow-md p-5 flex flex-col cursor-pointer transition-transform transform hover:-translate-y-1';
+                orderCard.dataset.orderId = order.id;
+                orderCard.innerHTML = `<div class="flex justify-between items-start mb-2"><h2 class="text-lg font-bold text-gray-900">${order.orderNumber || order.id.substring(0, 8)}</h2><span class="text-xs font-bold px-2 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}">${order.status}</span></div><p class="text-sm text-gray-600 mb-4 font-semibold">${order.name}</p><div class="mt-auto border-t pt-3"><p class="text-sm text-gray-500">Artículos: <strong>${order.items.length}</strong></p></div>`;
+                orderCard.addEventListener('click', () => openViewModal(order.id));
+                ordersGrid.appendChild(orderCard);
+            });
+        };
+        
+        const openViewModal = (orderId) => { /* ... (código sin cambios) ... */
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            const viewOrderModal = document.getElementById('view-order-modal');
+            document.getElementById('modal-view-id').textContent = order.orderNumber || order.id.substring(0,8);
+            document.getElementById('modal-view-name').textContent = order.name;
+            document.getElementById('modal-view-justification').textContent = order.justification;
+            const statusBadge = document.getElementById('modal-view-status');
+            statusBadge.textContent = order.status;
+            statusBadge.className = `text-lg font-bold px-3 py-1 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}`;
+            document.getElementById('manage-order-link').href = `orden.html?id=${encodeURIComponent(order.id)}`;
+            openModal(viewOrderModal);
+        };
+        
+        const createOrderForm = document.getElementById('create-order-form');
+        createOrderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(createOrderForm);
+            const itemsContainer = document.getElementById('items-container');
+            let items = [];
+            itemsContainer.querySelectorAll('.item-row').forEach(row => {
+                items.push({ description: row.querySelector('.item-desc').value, quantity: parseInt(row.querySelector('.item-qty').value, 10) });
+            });
+            const newOrder = {
+                name: formData.get('orderName'),
+                justification: formData.get('justification'),
+                status: 'Pendiente de Aprobación',
+                items: items,
+                historial: [{ status: 'Cargada', date: serverTimestamp() }],
+                createdAt: serverTimestamp(),
+                orderNumber: `OC-${new Date().getFullYear()}-${String(allOrders.length + 1).padStart(4, '0')}`
+            };
+            try {
+                await addDoc(ordersCollection, newOrder);
+                closeModal(document.getElementById('create-order-modal'));
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert("No se pudo crear la orden.");
+            }
+        });
+
+        // --- HELPERS (UI) ---
+        const addOrderBtn = document.getElementById('add-order-btn');
+        const createOrderModal = document.getElementById('create-order-modal');
+        const itemsContainer = document.getElementById('items-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const openModal = (modal) => { const c = modal.querySelector('.transform'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); c.classList.remove('scale-95', 'opacity-0'); }, 10); };
+        const closeModal = (modal) => { const c = modal.querySelector('.transform'); modal.classList.add('opacity-0'); c.classList.add('scale-95', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); }, 300); };
+        const createItemRow = () => { const d = document.createElement('div'); d.className = 'item-row grid grid-cols-12 gap-2 items-center'; d.innerHTML = `<input type="text" p-holder="Desc" class="item-desc col-span-8 p-2 border rounded-md" required><input type="number" p-holder="Cant." min="1" class="item-qty col-span-2 p-2 border rounded-md" required><button type="button" class="remove-item-btn col-span-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600">X</button>`; d.querySelector('.remove-item-btn').addEventListener('click', () => { d.remove(); updateRemoveButtons(); }); return d; };
+        const updateRemoveButtons = () => { const rows = itemsContainer.querySelectorAll('.item-row'); rows.forEach(r => { r.querySelector('.remove-item-btn').disabled = rows.length === 1; }); };
+        addItemBtn.addEventListener('click', () => { itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); });
+        addOrderBtn.addEventListener('click', () => { createOrderForm.reset(); itemsContainer.innerHTML = ''; itemsContainer.appendChild(createItemRow()); updateRemoveButtons(); openModal(createOrderModal); });
+        document.querySelectorAll('.close-modal-btn').forEach(b => b.addEventListener('click', () => { closeModal(document.getElementById('view-order-modal')); closeModal(createOrderModal); }));
     </script>
 </body>
 </html>
