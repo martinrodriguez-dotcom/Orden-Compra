@@ -18,7 +18,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Pendiente de Pago': 'bg-orange-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
+const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Pendiente de Pago': 'bg-orange-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-800' };
 
 // --- FUNCIÓN PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
@@ -61,7 +61,6 @@ function renderOrderDetails(order) {
     itemsTableBody.innerHTML = '';
     order.items.forEach(item => { itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`; });
 
-    // Mostrar/Ocultar y rellenar la sección del proveedor ganador
     const winnerSection = document.getElementById('winner-details-section');
     if (order.proveedorGanador) {
         document.getElementById('winner-provider-name').textContent = order.proveedorGanador.proveedor;
@@ -71,6 +70,17 @@ function renderOrderDetails(order) {
         winnerSection.classList.remove('hidden');
     } else {
         winnerSection.classList.add('hidden');
+    }
+
+    const paymentSection = document.getElementById('payment-details-section');
+    if (order.paymentDetails) {
+        document.getElementById('payment-amount').textContent = formatCurrency(order.paymentDetails.amount);
+        document.getElementById('payment-date').textContent = new Date(order.paymentDetails.date).toLocaleDateString('es-ES', { timeZone: 'UTC' });
+        document.getElementById('payment-transaction-id').textContent = order.paymentDetails.transactionId;
+        document.getElementById('payment-notes').textContent = order.paymentDetails.notes || '---';
+        paymentSection.classList.remove('hidden');
+    } else {
+        paymentSection.classList.add('hidden');
     }
 }
 
@@ -96,31 +106,29 @@ function renderActionPanel(order) {
             document.getElementById('reject-btn').addEventListener('click', () => updateUserAction('Rechazada'));
             break;
         case 'Presupuestos Pendientes':
-            actionPanel.innerHTML = `
-                <p class="text-sm mb-3">Cargue los presupuestos recibidos.</p>
-                <button id="add-budget-btn" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 mb-4">Cargar Nuevo Presupuesto</button>
-                <h4 class="font-semibold mb-2 text-sm">Presupuestos Cargados</h4>
-                <div id="budget-list" class="space-y-2 mb-4"></div>
-                <button id="select-winner-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Calcular y Seleccionar Proveedor</button>
-            `;
+            actionPanel.innerHTML = `<p class="text-sm mb-3">Cargue los presupuestos recibidos.</p><button id="add-budget-btn" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 mb-4">Cargar Nuevo Presupuesto</button><h4 class="font-semibold mb-2 text-sm">Presupuestos Cargados</h4><div id="budget-list" class="space-y-2 mb-4"></div><button id="select-winner-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>Calcular y Seleccionar Proveedor</button>`;
             renderBudgetList(order);
             document.getElementById('add-budget-btn').addEventListener('click', () => openModal(document.getElementById('budget-modal')));
             document.getElementById('select-winner-btn').addEventListener('click', () => handleSelectWinner(order));
             break;
         case 'Pendiente Aprobar Proveedor':
-            if (!order.proveedorGanador) {
-                actionPanel.innerHTML = `<p class="text-sm text-red-600">Error: No se ha asignado un proveedor ganador.</p>`;
-                return;
-            }
-            actionPanel.innerHTML = `
-                <p class="text-sm mb-4">Se ha recomendado a <strong>${order.proveedorGanador.proveedor}</strong>. Revise los detalles y apruebe para continuar al pago.</p>
-                <div class="flex flex-col gap-2">
-                    <button id="approve-provider-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar Proveedor</button>
-                    <button id="reject-provider-btn" class="w-full bg-yellow-500 text-black font-bold py-2 px-4 rounded-md hover:bg-yellow-600">Rechazar y Volver a Presupuestar</button>
-                </div>
-            `;
+            if (!order.proveedorGanador) { actionPanel.innerHTML = `<p class="text-sm text-red-600">Error: No se ha asignado un proveedor ganador.</p>`; return; }
+            actionPanel.innerHTML = `<p class="text-sm mb-4">Se ha recomendado a <strong>${order.proveedorGanador.proveedor}</strong>. Revise los detalles y apruebe para continuar al pago.</p><div class="flex flex-col gap-2"><button id="approve-provider-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar Proveedor</button><button id="reject-provider-btn" class="w-full bg-yellow-500 text-black font-bold py-2 px-4 rounded-md hover:bg-yellow-600">Rechazar y Volver a Presupuestar</button></div>`;
             document.getElementById('approve-provider-btn').addEventListener('click', () => updateUserAction('Pendiente de Pago'));
             document.getElementById('reject-provider-btn').addEventListener('click', () => revertToBudgeting());
+            break;
+        case 'Pendiente de Pago':
+            if (!order.proveedorGanador) { actionPanel.innerHTML = `<p class="text-sm text-red-600">Error: No se puede pagar sin un proveedor asignado.</p>`; return; }
+            actionPanel.innerHTML = `<p class="text-sm mb-4">La orden está aprobada y lista para ser pagada al proveedor <strong>${order.proveedorGanador.proveedor}</strong>.</p><button id="register-payment-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">Registrar Pago</button>`;
+            document.getElementById('register-payment-btn').addEventListener('click', () => {
+                const paymentModal = document.getElementById('payment-modal');
+                document.getElementById('payment-date-input').valueAsDate = new Date();
+                document.getElementById('payment-amount-input').value = order.proveedorGanador.costoFinalCalculado;
+                openModal(paymentModal);
+            });
+            break;
+        case 'Finalizada':
+             actionPanel.innerHTML = `<div class="text-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500 mx-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg><p class="text-sm font-semibold mt-2">Esta orden de compra ha sido completada y pagada.</p></div>`;
             break;
         default:
             actionPanel.innerHTML = `<p class="text-sm">No hay acciones para el estado: <strong>${order.status}</strong>.</p>`;
@@ -220,15 +228,50 @@ async function revertToBudgeting() {
     }
 }
 
+async function handlePaymentSubmit(event) {
+    event.preventDefault();
+    const orderId = new URLSearchParams(window.location.search).get('id');
+
+    const paymentDetails = {
+        date: document.getElementById('payment-date-input').value,
+        amount: parseFloat(document.getElementById('payment-amount-input').value),
+        transactionId: document.getElementById('payment-id-input').value,
+        notes: document.getElementById('payment-notes-input').value,
+    };
+
+    if (!paymentDetails.date || !paymentDetails.amount || !paymentDetails.transactionId) {
+        alert("Por favor, complete todos los campos de pago requeridos.");
+        return;
+    }
+
+    await updateUserAction('Finalizada', { paymentDetails: paymentDetails });
+
+    closeModal(document.getElementById('payment-modal'));
+}
+
 async function updateUserAction(newStatus, details = {}) {
     const orderId = new URLSearchParams(window.location.search).get('id');
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
         let historyMessage = newStatus.replace('Pendientes', '').replace('Pendiente ', '');
-        let updateData = { status: newStatus, historial: arrayUnion({ status: historyMessage, date: new Date() }) };
-        if (newStatus === 'Pendiente Aprobar Proveedor' && details.proveedorGanador) { updateData.proveedorGanador = details.proveedorGanador; }
+        
+        let updateData = {
+            status: newStatus,
+            historial: arrayUnion({ status: historyMessage, date: new Date() })
+        };
+        
+        if (details.proveedorGanador) {
+            updateData.proveedorGanador = details.proveedorGanador;
+        }
+        if (details.paymentDetails) {
+            updateData.paymentDetails = details.paymentDetails;
+        }
+
         await updateDoc(orderRef, updateData);
-    } catch (error) { console.error("Error al actualizar estado:", error); alert("No se pudo actualizar el estado."); }
+    } catch (error) {
+        console.error("Error al actualizar estado:", error);
+        alert("No se pudo actualizar el estado.");
+    }
 }
 
 // --- HELPERS DE UI ---
@@ -236,11 +279,18 @@ function formatCurrency(value) { return new Intl.NumberFormat('es-AR', { style: 
 
 const budgetModal = document.getElementById('budget-modal');
 const winnerModal = document.getElementById('winner-confirmation-modal');
+const paymentModal = document.getElementById('payment-modal');
+
 document.getElementById('budget-form').addEventListener('submit', handleBudgetSubmit);
+document.getElementById('payment-form').addEventListener('submit', handlePaymentSubmit);
+
 document.getElementById('close-budget-modal-btn').addEventListener('click', () => closeModal(budgetModal));
 document.getElementById('cancel-winner-btn').addEventListener('click', () => closeModal(winnerModal));
+document.getElementById('close-payment-modal-btn').addEventListener('click', () => closeModal(paymentModal));
+
 budgetModal.addEventListener('click', (e) => { if (e.target === budgetModal) closeModal(budgetModal); });
 winnerModal.addEventListener('click', (e) => { if (e.target === winnerModal) closeModal(winnerModal); });
+paymentModal.addEventListener('click', (e) => { if (e.target === paymentModal) closeModal(paymentModal); });
 
 function openModal(modal) { const c = modal.querySelector('.transform'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); c.classList.remove('scale-95', 'opacity-0'); }, 10); }
 function closeModal(modal) { const c = modal.querySelector('.transform'); modal.classList.add('opacity-0'); c.classList.add('scale-95', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
