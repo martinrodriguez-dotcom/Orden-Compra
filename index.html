@@ -41,7 +41,7 @@
         </main>
     </div>
 
-    <button id="add-order-btn" class="fixed bottom-8 left-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Crear nueva orden (Requiere Rol Etapa 1)">
+    <button id="add-order-btn" class="fixed bottom-8 left-8 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-transform transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed" disabled title="Crear nueva orden (Requiere Rol Etapa 1 o Admin)">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
     </button>
     
@@ -113,13 +113,11 @@
         const db = getFirestore(app);
         await signInAnonymously(auth);
         
-        // --- Variables Globales ---
         let allOrders = [];
         let allUsers = [];
         let currentUser = null;
         const addOrderBtn = document.getElementById('add-order-btn');
 
-        // --- Carga inicial y listeners ---
         const usersCollection = collection(db, "users");
         onSnapshot(usersCollection, (snapshot) => {
             allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -134,7 +132,6 @@
             renderOrders();
         });
 
-        // --- Lógica de Usuario / Sesión ---
         function populateUserSelector() {
             const userSelector = document.getElementById('user-selector');
             const currentSelected = userSelector.value;
@@ -150,9 +147,10 @@
             if (storedUser) {
                 currentUser = JSON.parse(storedUser);
                 document.getElementById('current-user-name').textContent = currentUser.name;
-                // Habilitar o deshabilitar botón de crear orden según rol 1
-                addOrderBtn.disabled = !currentUser.roles.includes(1);
+                // Habilitar si tiene rol 1 O si es admin
+                addOrderBtn.disabled = !(currentUser.roles.includes(1) || currentUser.isAdmin);
             } else {
+                currentUser = null;
                 document.getElementById('current-user-name').textContent = 'Ninguno';
                 addOrderBtn.disabled = true;
             }
@@ -171,7 +169,6 @@
             }
         });
 
-        // --- Renderizado y Lógica de Órdenes ---
         const ordersGrid = document.getElementById('orders-grid');
         const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-800' };
         
@@ -268,8 +265,7 @@
             closeModal(createOrderModal); 
         }));
         
-        checkCurrentUser(); // Llamada inicial para establecer el estado
+        checkCurrentUser(); // Llamada inicial
     </script>
 </body>
 </html>
-
