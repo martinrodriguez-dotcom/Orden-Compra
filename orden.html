@@ -15,152 +15,132 @@
     <div class="container mx-auto p-4 md:p-8">
         <div class="mb-6"><a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>Volver al listado</a></div>
         
-        <div id="order-details-container" class="bg-white rounded-lg shadow-lg p-6 md:p-8">
-            <header class="border-b pb-6 mb-6">
-                <div class="flex flex-wrap justify-between items-start gap-4">
-                    <div><h1 class="text-3xl md:text-4xl font-bold text-gray-900">Orden: <span id="order-id" class="text-blue-600"></span></h1><p id="order-name" class="text-lg text-gray-600 mt-1"></p></div>
-                    <div class="text-right"><p class="text-sm text-gray-500">Estado Actual</p><span id="order-status" class="text-lg font-bold px-4 py-2 rounded-full text-white"></span></div>
-                </div>
-            </header>
-
-            <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Columna Izquierda: Detalles e Items -->
-                <div class="md:col-span-2 space-y-8">
-                    <section><h2 class="text-xl font-semibold mb-2">Justificación</h2><p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p></section>
-                    <section><h2 class="text-xl font-semibold mb-3">Artículos Solicitados</h2><div class="overflow-x-auto border rounded-lg"><table class="min-w-full"><thead><tr class="bg-gray-100"><th class="p-3 text-left font-semibold text-sm text-gray-600">Descripción</th><th class="p-3 text-center font-semibold text-sm text-gray-600">Cantidad</th></tr></thead><tbody id="items-table-body"></tbody></table></div></section>
-                </div>
-
-                <!-- Columna Derecha: Historial y Acciones -->
-                <div class="md:col-span-1 space-y-8">
-                    <!-- NUEVO: Panel de Historial -->
-                    <section>
-                        <h2 class="text-xl font-semibold mb-3">Historial de la Orden</h2>
-                        <div id="history-list" class="space-y-4 border-l-2 border-gray-200 ml-2">
-                            <!-- El historial se generará aquí -->
-                        </div>
-                    </section>
-                    
-                    <!-- NUEVO: Panel de Acciones Dinámico -->
-                    <section id="action-panel-container">
-                        <h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2>
-                        <div id="action-panel" class="bg-gray-50 border rounded-lg p-4">
-                            <!-- El contenido dinámico irá aquí -->
-                        </div>
-                    </section>
-                </div>
-            </main>
+        <div id="order-details-container" class="bg-white rounded-lg shadow-lg p-6 md:p-8 hidden">
+            <header class="border-b pb-6 mb-6"><div class="flex flex-wrap justify-between items-start gap-4"><div><h1 class="text-3xl md:text-4xl font-bold text-gray-900">Orden: <span id="order-id"></span></h1><p id="order-name" class="text-lg text-gray-600 mt-1"></p></div><div class="text-right"><p class="text-sm text-gray-500">Estado</p><span id="order-status" class="text-lg font-bold px-4 py-2 rounded-full text-white"></span></div></div></header>
+            <main class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="md:col-span-2 space-y-8"><section><h2 class="text-xl font-semibold mb-2">Justificación</h2><p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p></section><section><h2 class="text-xl font-semibold mb-3">Artículos</h2><div class="overflow-x-auto border rounded-lg"><table class="min-w-full"><thead><tr class="bg-gray-100"><th class="p-3 text-left font-semibold text-sm">Descripción</th><th class="p-3 text-center font-semibold text-sm">Cantidad</th></tr></thead><tbody id="items-table-body"></tbody></table></div></section></div><div class="md:col-span-1 space-y-8"><section><h2 class="text-xl font-semibold mb-3">Historial</h2><div id="history-list" class="space-y-4 border-l-2 ml-2"></div></section><section id="action-panel-container"><h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2><div id="action-panel" class="bg-gray-50 border rounded-lg p-4"></div></section></div></main>
         </div>
-        
-        <div id="order-not-found" class="hidden text-center py-12"><h2 class="text-2xl font-bold text-red-600">Orden no encontrada</h2><p class="text-gray-600 mt-2">No se pudo encontrar la orden de compra especificada.</p></div>
+        <div id="loading-message" class="text-center py-12"><p class="text-gray-600">Cargando orden...</p></div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const getOrders = () => JSON.parse(localStorage.getItem('purchaseOrders')) || [];
-            const saveOrders = (orders) => localStorage.setItem('purchaseOrders', JSON.stringify(orders));
-            const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-            const params = new URLSearchParams(window.location.search);
-            const orderId = params.get('id');
-            const orders = getOrders();
-            const currentOrder = orders.find(o => o.id === orderId);
+        // --- FIREBASE SETUP ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNnUbg_LL6w4dZxqSA3vwCb7e1AHmM1vY",
+            authDomain: "orden-compra-d803f.firebaseapp.com",
+            projectId: "orden-compra-d803f",
+            storageBucket: "orden-compra-d803f.appspot.com",
+            messagingSenderId: "441828854057",
+            appId: "1:441828854057:web:3037aabc9d02e6e27fcf38"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        await signInAnonymously(auth);
+        
+        const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
 
-            const renderOrderDetails = (order) => {
-                document.getElementById('order-id').textContent = order.id;
-                document.getElementById('order-name').textContent = order.name;
-                const statusBadge = document.getElementById('order-status');
-                statusBadge.textContent = order.status;
-                statusBadge.className = `text-lg font-bold px-4 py-2 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}`;
-                document.getElementById('order-justification').textContent = order.justification;
-                const itemsTableBody = document.getElementById('items-table-body');
-                itemsTableBody.innerHTML = '';
-                if (order.items && order.items.length > 0) {
-                    order.items.forEach(item => {
-                        itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`;
-                    });
+        const params = new URLSearchParams(window.location.search);
+        const orderId = params.get('id');
+
+        if (!orderId) {
+            document.getElementById('loading-message').textContent = 'Error: No se especificó un ID de orden.';
+        } else {
+            const orderRef = doc(db, "purchaseOrders", orderId);
+            onSnapshot(orderRef, (docSnap) => { /* ... (código sin cambios) ... */
+                if (docSnap.exists()) {
+                    const order = { id: docSnap.id, ...docSnap.data() };
+                    document.getElementById('order-details-container').classList.remove('hidden');
+                    document.getElementById('loading-message').classList.add('hidden');
+                    renderOrderDetails(order);
+                    renderHistory(order);
+                    renderActionPanel(order);
                 } else {
-                    itemsTableBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-500">No hay artículos.</td></tr>';
+                    document.getElementById('loading-message').textContent = 'Error: Orden no encontrada.';
                 }
-            };
-            
-            // NUEVA FUNCIÓN: Renderizar el historial
-            const renderHistory = (order) => {
-                const historyList = document.getElementById('history-list');
-                historyList.innerHTML = '';
-                if (order.historial && order.historial.length > 0) {
-                    order.historial.forEach(entry => {
-                        const date = new Date(entry.date).toLocaleString('es-ES');
-                        historyList.innerHTML += `
-                            <div class="relative pl-6">
-                                <div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div>
-                                <h4 class="font-semibold">${entry.status}</h4>
-                                <p class="text-xs text-gray-500">${date}</p>
-                            </div>
-                        `;
-                    });
-                }
-            };
+            });
+        }
 
-            // NUEVA FUNCIÓN: Renderizar el panel de acciones
-            const renderActionPanel = (order) => {
-                const actionPanel = document.getElementById('action-panel');
-                actionPanel.innerHTML = ''; // Limpiar panel
-
-                switch (order.status) {
-                    case 'Pendiente de Aprobación':
-                        actionPanel.innerHTML = `
-                            <p class="text-sm text-gray-700 mb-4">La orden requiere aprobación para continuar al siguiente paso.</p>
-                            <div class="flex flex-col gap-2">
-                                <button id="approve-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar Orden</button>
-                                <button id="reject-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600">Rechazar Orden</button>
-                            </div>
-                        `;
-                        document.getElementById('approve-btn').addEventListener('click', () => updateUserAction('Presupuestos Pendientes'));
-                        document.getElementById('reject-btn').addEventListener('click', () => updateUserAction('Rechazada'));
-                        break;
-                    
-                    case 'Presupuestos Pendientes':
-                        actionPanel.innerHTML = `<p class="text-sm text-gray-700">El siguiente paso es cargar los presupuestos de los proveedores para esta orden.</p><button class="w-full mt-4 bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded-md cursor-not-allowed">Cargar Presupuestos (Próximamente)</button>`;
-                        break;
-                    
-                    case 'Rechazada':
-                        actionPanel.innerHTML = `<p class="text-sm font-semibold text-red-700">Esta orden ha sido rechazada. No hay más acciones disponibles.</p>`;
-                        break;
-                        
-                    default:
-                        actionPanel.innerHTML = `<p class="text-sm text-gray-700">No hay acciones disponibles para este estado.</p>`;
-                }
-            };
-            
-            // NUEVA FUNCIÓN: Actualizar estado y guardar
-            const updateUserAction = (newStatus) => {
-                const orderIndex = orders.findIndex(o => o.id === orderId);
-                if (orderIndex === -1) return;
-                
-                // Actualizar estado
-                orders[orderIndex].status = newStatus;
-                
-                // Añadir al historial
-                if (!orders[orderIndex].historial) {
-                    orders[orderIndex].historial = [];
-                }
-                orders[orderIndex].historial.push({ status: newStatus.replace('Pendientes', ''), date: new Date().toISOString() });
-                
-                // Guardar y recargar
-                saveOrders(orders);
-                location.reload();
-            };
-
-            // --- INICIALIZACIÓN ---
-            if (orderId && currentOrder) {
-                renderOrderDetails(currentOrder);
-                renderHistory(currentOrder);
-                renderActionPanel(currentOrder);
-            } else {
-                document.getElementById('order-details-container').classList.add('hidden');
-                document.getElementById('order-not-found').classList.remove('hidden');
+        const renderOrderDetails = (order) => { /* ... (código sin cambios) ... */
+             document.getElementById('order-id').textContent = order.orderNumber || order.id.substring(0,8);
+             document.getElementById('order-name').textContent = order.name;
+             const statusBadge = document.getElementById('order-status');
+             statusBadge.textContent = order.status;
+             statusBadge.className = `text-lg font-bold px-4 py-2 rounded-full text-white ${statusColors[order.status] || 'bg-blue-500'}`;
+             document.getElementById('order-justification').textContent = order.justification;
+             const itemsTableBody = document.getElementById('items-table-body');
+             itemsTableBody.innerHTML = '';
+             order.items.forEach(item => { itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`; });
+        };
+        
+        const renderHistory = (order) => { /* ... (código sin cambios) ... */
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            const toDateSafe = (timestamp) => timestamp && timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            if (order.historial) {
+                order.historial.forEach(entry => {
+                    const date = toDateSafe(entry.date).toLocaleString('es-ES');
+                    historyList.innerHTML += `<div class="relative pl-6"><div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div><h4 class="font-semibold">${entry.status}</h4><p class="text-xs text-gray-500">${date}</p></div>`;
+                });
             }
-        });
+        };
+
+        const renderActionPanel = (order) => { /* ... (código sin cambios) ... */
+            const actionPanel = document.getElementById('action-panel');
+            actionPanel.innerHTML = '';
+            switch (order.status) {
+                case 'Pendiente de Aprobación':
+                    actionPanel.innerHTML = `<p class="text-sm mb-4">La orden requiere aprobación.</p><div class="flex flex-col gap-2"><button id="approve-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar</button><button id="reject-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600">Rechazar</button></div>`;
+                    document.getElementById('approve-btn').addEventListener('click', () => updateUserAction('Presupuestos Pendientes'));
+                    document.getElementById('reject-btn').addEventListener('click', () => updateUserAction('Rechazada'));
+                    break;
+                case 'Presupuestos Pendientes':
+                    actionPanel.innerHTML = `<form id="budget-form" class="space-y-3"><p class="text-sm mb-2">Cargar presupuestos.</p><div><input type="text" id="provider-name" p-holder="Proveedor" required class="w-full p-2 border rounded-md"></div><div><input type="number" id="budget-amount" p-holder="Monto (ARS)" required class="w-full p-2 border rounded-md"></div><div><label class="text-xs">Archivo</label><input type="file" id="budget-file" class="w-full text-xs"></div><button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600">Cargar</button></form><div class="border-t my-4"></div><h4 class="font-semibold mb-2 text-sm">Presupuestos Cargados</h4><div id="budget-list" class="space-y-2"></div>`;
+                    renderBudgetList(order);
+                    document.getElementById('budget-form').addEventListener('submit', handleBudgetSubmit);
+                    break;
+                default:
+                     actionPanel.innerHTML = `<p class="text-sm">No hay acciones para el estado: <strong>${order.status}</strong>.</p>`;
+            }
+        };
+
+        const renderBudgetList = (order) => { /* ... (código sin cambios) ... */
+             const budgetList = document.getElementById('budget-list'); budgetList.innerHTML = '<p class="text-xs text-gray-500">Aún no hay presupuestos.</p>';
+             if (order.presupuestos && order.presupuestos.length > 0) {
+                 budgetList.innerHTML = '';
+                 order.presupuestos.forEach(b => {
+                    budgetList.innerHTML += `<div class="bg-white p-2 border rounded-md"><div class="flex justify-between items-center"><div><p class="font-bold text-sm">${b.proveedor}</p><p class="text-xs text-green-700 font-semibold">$ ${new Intl.NumberFormat('es-AR').format(b.monto)}</p><p class="text-xs text-gray-500 truncate">${b.archivoNombre || ''}</p></div><button data-budget-id="${b.id}" class="select-provider-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600">Seleccionar</button></div></div>`;
+                 });
+                 document.querySelectorAll('.select-provider-btn').forEach(btn => btn.addEventListener('click', (e) => updateUserAction('Pendiente Aprobar Proveedor', { selectedBudgetId: e.target.dataset.budgetId })));
+             }
+        };
+
+        const handleBudgetSubmit = async (e) => { /* ... (código sin cambios) ... */
+            e.preventDefault();
+            const fileInput = document.getElementById('budget-file');
+            const newBudget = { id: `BUD-${Date.now()}`, proveedor: document.getElementById('provider-name').value, monto: parseFloat(document.getElementById('budget-amount').value), archivoNombre: fileInput.files.length > 0 ? fileInput.files[0].name : null, };
+            try {
+                const orderRef = doc(db, "purchaseOrders", orderId);
+                await updateDoc(orderRef, { presupuestos: arrayUnion(newBudget) });
+                document.getElementById('budget-form').reset();
+            } catch (error) { console.error("Error adding budget:", error); alert("No se pudo agregar el presupuesto."); }
+        };
+
+        const updateUserAction = async (newStatus, details = {}) => { /* ... (código sin cambios) ... */
+            try {
+                const orderRef = doc(db, "purchaseOrders", orderId);
+                let historyMessage = newStatus.replace('Pendientes', '').replace('Pendiente ', '');
+                let updateData = { status: newStatus, historial: arrayUnion({ status: historyMessage, date: serverTimestamp() }) };
+                if (newStatus === 'Pendiente Aprobar Proveedor' && details.selectedBudgetId) { updateData.proveedorSeleccionadoId = details.selectedBudgetId; }
+                await updateDoc(orderRef, updateData);
+            } catch (error) { console.error("Error updating status:", error); alert("No se pudo actualizar el estado."); }
+        };
     </script>
 </body>
 </html>
