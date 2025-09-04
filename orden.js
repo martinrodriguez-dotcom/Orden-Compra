@@ -1,7 +1,7 @@
-// Importar funciones de Firebase
+// Importar funciones de Firebase, incluyendo deleteField
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, onSnapshot, updateDoc, arrayUnion, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -18,26 +18,13 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Diccionario de colores para los estados
-const statusColors = { 
-    'Pendiente de Aprobación': 'bg-yellow-500', 
-    'Presupuestos Pendientes': 'bg-cyan-500', 
-    'Pendiente Aprobar Proveedor': 'bg-purple-500', 
-    'Pendiente de Pago': 'bg-orange-500',
-    'Rechazada': 'bg-red-500', 
-    'Finalizada': 'bg-gray-500' 
-};
+const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Pendiente de Pago': 'bg-orange-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
 
 // --- FUNCIÓN PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
-    // Iniciar sesión anónimamente
     await signInAnonymously(auth);
-    
-    // Obtener el ID de la orden desde la URL
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('id');
-
-    // Elementos del DOM
     const loadingMessage = document.getElementById('loading-message');
     const orderDetailsContainer = document.getElementById('order-details-container');
 
@@ -47,15 +34,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const orderRef = doc(db, "purchaseOrders", orderId);
-    
-    // Listener de Firebase para actualizaciones en tiempo real
     onSnapshot(orderRef, (docSnap) => {
         if (docSnap.exists()) {
             const order = { id: docSnap.id, ...docSnap.data() };
             orderDetailsContainer.classList.remove('hidden');
             loadingMessage.classList.add('hidden');
-            
-            // Renderizar todas las partes de la página con los datos actualizados
             renderOrderDetails(order);
             renderHistory(order);
             renderActionPanel(order);
@@ -67,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // --- FUNCIONES DE RENDERIZADO ---
-
 function renderOrderDetails(order) {
     document.getElementById('order-id').textContent = order.orderNumber || order.id.substring(0, 8);
     document.getElementById('order-name').textContent = order.name;
@@ -77,9 +59,19 @@ function renderOrderDetails(order) {
     document.getElementById('order-justification').textContent = order.justification;
     const itemsTableBody = document.getElementById('items-table-body');
     itemsTableBody.innerHTML = '';
-    order.items.forEach(item => {
-        itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`;
-    });
+    order.items.forEach(item => { itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`; });
+
+    // Mostrar/Ocultar y rellenar la sección del proveedor ganador
+    const winnerSection = document.getElementById('winner-details-section');
+    if (order.proveedorGanador) {
+        document.getElementById('winner-provider-name').textContent = order.proveedorGanador.proveedor;
+        document.getElementById('winner-provider-cost').textContent = formatCurrency(order.proveedorGanador.costoFinalCalculado);
+        document.getElementById('winner-provider-term').textContent = `${order.proveedorGanador.plazoPago} días`;
+        document.getElementById('winner-provider-method').textContent = order.proveedorGanador.metodoPago;
+        winnerSection.classList.remove('hidden');
+    } else {
+        winnerSection.classList.add('hidden');
+    }
 }
 
 function renderHistory(order) {
@@ -115,6 +107,21 @@ function renderActionPanel(order) {
             document.getElementById('add-budget-btn').addEventListener('click', () => openModal(document.getElementById('budget-modal')));
             document.getElementById('select-winner-btn').addEventListener('click', () => handleSelectWinner(order));
             break;
+        case 'Pendiente Aprobar Proveedor':
+            if (!order.proveedorGanador) {
+                actionPanel.innerHTML = `<p class="text-sm text-red-600">Error: No se ha asignado un proveedor ganador.</p>`;
+                return;
+            }
+            actionPanel.innerHTML = `
+                <p class="text-sm mb-4">Se ha recomendado a <strong>${order.proveedorGanador.proveedor}</strong>. Revise los detalles y apruebe para continuar al pago.</p>
+                <div class="flex flex-col gap-2">
+                    <button id="approve-provider-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar Proveedor</button>
+                    <button id="reject-provider-btn" class="w-full bg-yellow-500 text-black font-bold py-2 px-4 rounded-md hover:bg-yellow-600">Rechazar y Volver a Presupuestar</button>
+                </div>
+            `;
+            document.getElementById('approve-provider-btn').addEventListener('click', () => updateUserAction('Pendiente de Pago'));
+            document.getElementById('reject-provider-btn').addEventListener('click', () => revertToBudgeting());
+            break;
         default:
             actionPanel.innerHTML = `<p class="text-sm">No hay acciones para el estado: <strong>${order.status}</strong>.</p>`;
     }
@@ -141,11 +148,10 @@ function renderBudgetList(order) {
 
 function handleSelectWinner(order) {
     if (!order.presupuestos || order.presupuestos.length === 0) return;
-    const TASA_ANUAL = 0.50; // Tasa de descuento anual
+    const TASA_ANUAL = 0.50;
     const tasaDiaria = Math.pow(1 + TASA_ANUAL, 1 / 365) - 1;
     let ganador = null;
     let valorPresenteMinimo = Infinity;
-
     order.presupuestos.forEach(b => {
         const precioConIVA = b.incluyeIVA ? b.precioBase : b.precioBase * 1.21;
         const costoFinal = precioConIVA + (b.costoFlete || 0);
@@ -155,7 +161,6 @@ function handleSelectWinner(order) {
             ganador = { ...b, costoFinalCalculado: costoFinal, valorPresenteCalculado: valorPresente };
         }
     });
-
     if (ganador) {
         showWinnerConfirmationModal(ganador, order.presupuestos);
     }
@@ -167,39 +172,22 @@ function showWinnerConfirmationModal(winner, allBudgets) {
     document.getElementById('winner-final-cost').textContent = formatCurrency(winner.costoFinalCalculado);
     document.getElementById('winner-present-value').textContent = formatCurrency(winner.valorPresenteCalculado);
     document.getElementById('winner-justification-list').innerHTML = generateJustification(winner, allBudgets);
-    
     const confirmBtn = document.getElementById('confirm-winner-btn');
     confirmBtn.onclick = () => {
         updateUserAction('Pendiente Aprobar Proveedor', { proveedorGanador: winner });
         closeModal(modal);
     };
-
     openModal(modal);
 }
 
 function generateJustification(winner, allBudgets) {
     let reasons = [];
     reasons.push(`Es la opción con el <strong>menor Valor Presente</strong> (costo real ajustado por plazo).`);
-    
     const minCostoFinal = Math.min(...allBudgets.map(b => (b.incluyeIVA ? b.precioBase : b.precioBase * 1.21) + (b.costoFlete || 0)));
-    if (winner.costoFinalCalculado === minCostoFinal) {
-        reasons.push(`Coincide con el <strong>menor costo final</strong> sin ajuste financiero.`);
-    }
-
-    if (winner.costoFlete === 0) {
-        reasons.push(`No presenta costos de flete adicionales.`);
-    }
-
-    if (winner.incluyeIVA) {
-        reasons.push(`El precio presupuestado ya incluye IVA.`);
-    }
-
-    if (winner.plazoPago === 0) {
-        reasons.push(`Ofrece pago de contado.`);
-    } else {
-        reasons.push(`Presenta un plazo de pago de ${winner.plazoPago} días.`);
-    }
-
+    if (winner.costoFinalCalculado === minCostoFinal) { reasons.push(`Coincide con el <strong>menor costo final</strong> sin ajuste financiero.`); }
+    if (winner.costoFlete === 0) { reasons.push(`No presenta costos de flete adicionales.`); }
+    if (winner.incluyeIVA) { reasons.push(`El precio presupuestado ya incluye IVA.`); }
+    if (winner.plazoPago === 0) { reasons.push(`Ofrece pago de contado.`); } else { reasons.push(`Presenta un plazo de pago de ${winner.plazoPago} días.`); }
     return reasons.map(reason => `<li>${reason}</li>`).join('');
 }
 
@@ -207,24 +195,28 @@ async function handleBudgetSubmit(event) {
     event.preventDefault();
     const orderId = new URLSearchParams(window.location.search).get('id');
     const fileInput = document.getElementById('budget-file');
-    const newBudget = {
-        id: `BUD-${Date.now()}`,
-        proveedor: document.getElementById('provider-name').value,
-        precioBase: parseFloat(document.getElementById('budget-base-price').value),
-        incluyeIVA: document.getElementById('has-iva').checked,
-        costoFlete: parseFloat(document.getElementById('shipping-cost').value) || 0,
-        plazoPago: parseInt(document.getElementById('payment-term').value) || 0,
-        metodoPago: document.getElementById('payment-method').value,
-        archivoNombre: fileInput.files.length > 0 ? fileInput.files[0].name : null,
-    };
+    const newBudget = { id: `BUD-${Date.now()}`, proveedor: document.getElementById('provider-name').value, precioBase: parseFloat(document.getElementById('budget-base-price').value), incluyeIVA: document.getElementById('has-iva').checked, costoFlete: parseFloat(document.getElementById('shipping-cost').value) || 0, plazoPago: parseInt(document.getElementById('payment-term').value) || 0, metodoPago: document.getElementById('payment-method').value, archivoNombre: fileInput.files.length > 0 ? fileInput.files[0].name : null, };
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
         await updateDoc(orderRef, { presupuestos: arrayUnion(newBudget) });
         closeModal(document.getElementById('budget-modal'));
         document.getElementById('budget-form').reset();
+    } catch (error) { console.error("Error al agregar presupuesto:", error); alert("No se pudo agregar el presupuesto."); }
+}
+
+async function revertToBudgeting() {
+    const orderId = new URLSearchParams(window.location.search).get('id');
+    if (!confirm('¿Está seguro de que desea rechazar esta selección y volver a la etapa de presupuestos?')) return;
+    try {
+        const orderRef = doc(db, "purchaseOrders", orderId);
+        await updateDoc(orderRef, {
+            status: 'Presupuestos Pendientes',
+            proveedorGanador: deleteField(),
+            historial: arrayUnion({ status: 'Selección Rechazada', date: new Date() })
+        });
     } catch (error) {
-        console.error("Error al agregar presupuesto:", error);
-        alert("No se pudo agregar el presupuesto.");
+        console.error("Error al revertir el estado:", error);
+        alert("No se pudo revertir el estado.");
     }
 }
 
@@ -233,25 +225,14 @@ async function updateUserAction(newStatus, details = {}) {
     try {
         const orderRef = doc(db, "purchaseOrders", orderId);
         let historyMessage = newStatus.replace('Pendientes', '').replace('Pendiente ', '');
-        let updateData = {
-            status: newStatus,
-            historial: arrayUnion({ status: historyMessage, date: new Date() })
-        };
-        if (newStatus === 'Pendiente Aprobar Proveedor' && details.proveedorGanador) {
-            updateData.proveedorGanador = details.proveedorGanador;
-        }
+        let updateData = { status: newStatus, historial: arrayUnion({ status: historyMessage, date: new Date() }) };
+        if (newStatus === 'Pendiente Aprobar Proveedor' && details.proveedorGanador) { updateData.proveedorGanador = details.proveedorGanador; }
         await updateDoc(orderRef, updateData);
-    } catch (error) {
-        console.error("Error al actualizar estado:", error);
-        alert("No se pudo actualizar el estado.");
-    }
+    } catch (error) { console.error("Error al actualizar estado:", error); alert("No se pudo actualizar el estado."); }
 }
 
 // --- HELPERS DE UI ---
-
-function formatCurrency(value) {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value);
-}
+function formatCurrency(value) { return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(value); }
 
 const budgetModal = document.getElementById('budget-modal');
 const winnerModal = document.getElementById('winner-confirmation-modal');
@@ -261,15 +242,5 @@ document.getElementById('cancel-winner-btn').addEventListener('click', () => clo
 budgetModal.addEventListener('click', (e) => { if (e.target === budgetModal) closeModal(budgetModal); });
 winnerModal.addEventListener('click', (e) => { if (e.target === winnerModal) closeModal(winnerModal); });
 
-function openModal(modal) {
-    const c = modal.querySelector('.transform');
-    modal.classList.remove('hidden');
-    setTimeout(() => { modal.classList.remove('opacity-0'); c.classList.remove('scale-95', 'opacity-0'); }, 10);
-}
-
-function closeModal(modal) {
-    const c = modal.querySelector('.transform');
-    modal.classList.add('opacity-0');
-    c.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => { modal.classList.add('hidden'); }, 300);
-}
+function openModal(modal) { const c = modal.querySelector('.transform'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); c.classList.remove('scale-95', 'opacity-0'); }, 10); }
+function closeModal(modal) { const c = modal.querySelector('.transform'); modal.classList.add('opacity-0'); c.classList.add('scale-95', 'opacity-0'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
