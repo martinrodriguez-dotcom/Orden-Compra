@@ -8,18 +8,71 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+    <style> 
+        body { font-family: 'Inter', sans-serif; } 
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
-        <div class="mb-6"><a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>Volver al listado</a></div>
+        <div class="mb-6">
+            <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                Volver al listado
+            </a>
+        </div>
         
         <div id="order-details-container" class="bg-white rounded-lg shadow-lg p-6 md:p-8 hidden">
-            <header class="border-b pb-6 mb-6"><div class="flex flex-wrap justify-between items-start gap-4"><div><h1 class="text-3xl md:text-4xl font-bold text-gray-900">Orden: <span id="order-id"></span></h1><p id="order-name" class="text-lg text-gray-600 mt-1"></p></div><div class="text-right"><p class="text-sm text-gray-500">Estado</p><span id="order-status" class="text-lg font-bold px-4 py-2 rounded-full text-white"></span></div></div></header>
-            <main class="grid grid-cols-1 md:grid-cols-3 gap-8"><div class="md:col-span-2 space-y-8"><section><h2 class="text-xl font-semibold mb-2">Justificación</h2><p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p></section><section><h2 class="text-xl font-semibold mb-3">Artículos</h2><div class="overflow-x-auto border rounded-lg"><table class="min-w-full"><thead><tr class="bg-gray-100"><th class="p-3 text-left font-semibold text-sm">Descripción</th><th class="p-3 text-center font-semibold text-sm">Cantidad</th></tr></thead><tbody id="items-table-body"></tbody></table></div></section></div><div class="md:col-span-1 space-y-8"><section><h2 class="text-xl font-semibold mb-3">Historial</h2><div id="history-list" class="space-y-4 border-l-2 ml-2"></div></section><section id="action-panel-container"><h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2><div id="action-panel" class="bg-gray-50 border rounded-lg p-4"></div></section></div></main>
+            <header class="border-b pb-6 mb-6">
+                <div class="flex flex-wrap justify-between items-start gap-4">
+                    <div>
+                        <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Orden: <span id="order-id"></span></h1>
+                        <p id="order-name" class="text-lg text-gray-600 mt-1"></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Estado</p>
+                        <span id="order-status" class="text-lg font-bold px-4 py-2 rounded-full text-white"></span>
+                    </div>
+                </div>
+            </header>
+            <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2 space-y-8">
+                    <section>
+                        <h2 class="text-xl font-semibold mb-2">Justificación</h2>
+                        <p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p>
+                    </section>
+                    <section>
+                        <h2 class="text-xl font-semibold mb-3">Artículos</h2>
+                        <div class="overflow-x-auto border rounded-lg">
+                            <table class="min-w-full">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="p-3 text-left font-semibold text-sm">Descripción</th>
+                                        <th class="p-3 text-center font-semibold text-sm">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="items-table-body"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                <div class="md:col-span-1 space-y-8">
+                    <section>
+                        <h2 class="text-xl font-semibold mb-3">Historial</h2>
+                        <div id="history-list" class="space-y-4 border-l-2 ml-2"></div>
+                    </section>
+                    <section id="action-panel-container">
+                        <h2 class="text-xl font-semibold mb-3">Próximos Pasos</h2>
+                        <div id="action-panel" class="bg-gray-50 border rounded-lg p-4"></div>
+                    </section>
+                </div>
+            </main>
         </div>
-        <div id="loading-message" class="text-center py-12"><p class="text-gray-600">Cargando orden...</p></div>
+        <div id="loading-message" class="text-center py-12">
+            <p class="text-gray-600">Cargando orden...</p>
+        </div>
     </div>
 
     <!-- Firebase SDKs -->
@@ -43,7 +96,13 @@
         
         await signInAnonymously(auth);
         
-        const statusColors = { 'Pendiente de Aprobación': 'bg-yellow-500', 'Presupuestos Pendientes': 'bg-cyan-500', 'Pendiente Aprobar Proveedor': 'bg-purple-500', 'Rechazada': 'bg-red-500', 'Finalizada': 'bg-gray-500' };
+        const statusColors = { 
+            'Pendiente de Aprobación': 'bg-yellow-500', 
+            'Presupuestos Pendientes': 'bg-cyan-500', 
+            'Pendiente Aprobar Proveedor': 'bg-purple-500', 
+            'Rechazada': 'bg-red-500', 
+            'Finalizada': 'bg-gray-500' 
+        };
 
         const params = new URLSearchParams(window.location.search);
         const orderId = params.get('id');
@@ -52,6 +111,7 @@
             document.getElementById('loading-message').textContent = 'Error: No se especificó un ID de orden.';
         } else {
             const orderRef = doc(db, "purchaseOrders", orderId);
+
             onSnapshot(orderRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const order = { id: docSnap.id, ...docSnap.data() };
@@ -66,7 +126,7 @@
             });
         }
 
-        const renderOrderDetails = (order) => { /* (sin cambios) */
+        const renderOrderDetails = (order) => {
              document.getElementById('order-id').textContent = order.orderNumber || order.id.substring(0,8);
              document.getElementById('order-name').textContent = order.name;
              const statusBadge = document.getElementById('order-status');
@@ -75,32 +135,55 @@
              document.getElementById('order-justification').textContent = order.justification;
              const itemsTableBody = document.getElementById('items-table-body');
              itemsTableBody.innerHTML = '';
-             order.items.forEach(item => { itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`; });
+             order.items.forEach(item => { 
+                itemsTableBody.innerHTML += `<tr class="border-b last:border-b-0"><td class="p-3">${item.description}</td><td class="p-3 text-center">${item.quantity}</td></tr>`; 
+            });
         };
         
-        const renderHistory = (order) => { /* (sin cambios) */
+        const renderHistory = (order) => {
             const historyList = document.getElementById('history-list');
             historyList.innerHTML = '';
             const toDateSafe = (timestamp) => timestamp && timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
             if (order.historial) {
+                // Ordenar el historial por fecha antes de mostrarlo
                 order.historial.slice().sort((a, b) => toDateSafe(a.date) - toDateSafe(b.date)).forEach(entry => {
                     const date = toDateSafe(entry.date).toLocaleString('es-ES');
-                    historyList.innerHTML += `<div class="relative pl-6"><div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div><h4 class="font-semibold">${entry.status}</h4><p class="text-xs text-gray-500">${date}</p></div>`;
+                    historyList.innerHTML += `
+                        <div class="relative pl-6">
+                            <div class="absolute -left-1.5 top-1 h-3 w-3 rounded-full bg-blue-500"></div>
+                            <h4 class="font-semibold">${entry.status}</h4>
+                            <p class="text-xs text-gray-500">${date}</p>
+                        </div>`;
                 });
             }
         };
 
-        const renderActionPanel = (order) => { /* (sin cambios) */
+        const renderActionPanel = (order) => {
             const actionPanel = document.getElementById('action-panel');
-            actionPanel.innerHTML = '';
+            actionPanel.innerHTML = ''; // Limpiar
             switch (order.status) {
                 case 'Pendiente de Aprobación':
-                    actionPanel.innerHTML = `<p class="text-sm mb-4">La orden requiere aprobación.</p><div class="flex flex-col gap-2"><button id="approve-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar</button><button id="reject-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600">Rechazar</button></div>`;
+                    actionPanel.innerHTML = `
+                        <p class="text-sm mb-4">La orden requiere aprobación.</p>
+                        <div class="flex flex-col gap-2">
+                            <button id="approve-btn" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md hover:bg-green-600">Aprobar</button>
+                            <button id="reject-btn" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600">Rechazar</button>
+                        </div>`;
                     document.getElementById('approve-btn').addEventListener('click', () => updateUserAction('Presupuestos Pendientes'));
                     document.getElementById('reject-btn').addEventListener('click', () => updateUserAction('Rechazada'));
                     break;
                 case 'Presupuestos Pendientes':
-                    actionPanel.innerHTML = `<form id="budget-form" class="space-y-3"><p class="text-sm mb-2">Cargar presupuestos.</p><div><input type="text" id="provider-name" p-holder="Proveedor" required class="w-full p-2 border rounded-md"></div><div><input type="number" id="budget-amount" p-holder="Monto (ARS)" required class="w-full p-2 border rounded-md"></div><div><label class="text-xs">Archivo</label><input type="file" id="budget-file" class="w-full text-xs"></div><button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600">Cargar</button></form><div class="border-t my-4"></div><h4 class="font-semibold mb-2 text-sm">Presupuestos Cargados</h4><div id="budget-list" class="space-y-2"></div>`;
+                    actionPanel.innerHTML = `
+                        <form id="budget-form" class="space-y-3">
+                            <p class="text-sm mb-2">Cargar presupuestos.</p>
+                            <div><input type="text" id="provider-name" placeholder="Proveedor" required class="w-full p-2 border rounded-md"></div>
+                            <div><input type="number" id="budget-amount" placeholder="Monto (ARS)" required class="w-full p-2 border rounded-md"></div>
+                            <div><label class="text-xs">Archivo</label><input type="file" id="budget-file" class="w-full text-xs"></div>
+                            <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600">Cargar</button>
+                        </form>
+                        <div class="border-t my-4"></div>
+                        <h4 class="font-semibold mb-2 text-sm">Presupuestos Cargados</h4>
+                        <div id="budget-list" class="space-y-2"></div>`;
                     renderBudgetList(order);
                     document.getElementById('budget-form').addEventListener('submit', handleBudgetSubmit);
                     break;
@@ -109,42 +192,68 @@
             }
         };
 
-        const renderBudgetList = (order) => { /* (sin cambios) */
-             const budgetList = document.getElementById('budget-list'); budgetList.innerHTML = '<p class="text-xs text-gray-500">Aún no hay presupuestos.</p>';
+        const renderBudgetList = (order) => {
+             const budgetList = document.getElementById('budget-list'); 
+             budgetList.innerHTML = '<p class="text-xs text-gray-500">Aún no hay presupuestos.</p>';
              if (order.presupuestos && order.presupuestos.length > 0) {
                  budgetList.innerHTML = '';
                  order.presupuestos.forEach(b => {
-                    budgetList.innerHTML += `<div class="bg-white p-2 border rounded-md"><div class="flex justify-between items-center"><div><p class="font-bold text-sm">${b.proveedor}</p><p class="text-xs text-green-700 font-semibold">$ ${new Intl.NumberFormat('es-AR').format(b.monto)}</p><p class="text-xs text-gray-500 truncate">${b.archivoNombre || ''}</p></div><button data-budget-id="${b.id}" class="select-provider-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600">Seleccionar</button></div></div>`;
+                    budgetList.innerHTML += `
+                        <div class="bg-white p-2 border rounded-md">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-bold text-sm">${b.proveedor}</p>
+                                    <p class="text-xs text-green-700 font-semibold">$ ${new Intl.NumberFormat('es-AR').format(b.monto)}</p>
+                                    <p class="text-xs text-gray-500 truncate">${b.archivoNombre || ''}</p>
+                                </div>
+                                <button data-budget-id="${b.id}" class="select-provider-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600">Seleccionar</button>
+                            </div>
+                        </div>`;
                  });
                  document.querySelectorAll('.select-provider-btn').forEach(btn => btn.addEventListener('click', (e) => updateUserAction('Pendiente Aprobar Proveedor', { selectedBudgetId: e.target.dataset.budgetId })));
              }
         };
 
-        const handleBudgetSubmit = async (e) => { /* (sin cambios) */
+        const handleBudgetSubmit = async (e) => {
             e.preventDefault();
             const fileInput = document.getElementById('budget-file');
-            const newBudget = { id: `BUD-${Date.now()}`, proveedor: document.getElementById('provider-name').value, monto: parseFloat(document.getElementById('budget-amount').value), archivoNombre: fileInput.files.length > 0 ? fileInput.files[0].name : null, };
+            const newBudget = { 
+                id: `BUD-${Date.now()}`, 
+                proveedor: document.getElementById('provider-name').value, 
+                monto: parseFloat(document.getElementById('budget-amount').value), 
+                archivoNombre: fileInput.files.length > 0 ? fileInput.files[0].name : null, 
+            };
             try {
                 const orderRef = doc(db, "purchaseOrders", orderId);
                 await updateDoc(orderRef, { presupuestos: arrayUnion(newBudget) });
                 document.getElementById('budget-form').reset();
-            } catch (error) { console.error("Error adding budget:", error); alert("No se pudo agregar el presupuesto."); }
+            } catch (error) { 
+                console.error("Error adding budget:", error); 
+                alert("No se pudo agregar el presupuesto."); 
+            }
         };
 
         const updateUserAction = async (newStatus, details = {}) => {
             try {
                 const orderRef = doc(db, "purchaseOrders", orderId);
                 let historyMessage = newStatus.replace('Pendientes', '').replace('Pendiente ', '');
+                
                 let updateData = { 
                     status: newStatus, 
                     historial: arrayUnion({ status: historyMessage, date: new Date() }) // CORREGIDO
                 };
+
                 if (newStatus === 'Pendiente Aprobar Proveedor' && details.selectedBudgetId) { 
                     updateData.proveedorSeleccionadoId = details.selectedBudgetId; 
                 }
+                
                 await updateDoc(orderRef, updateData);
-            } catch (error) { console.error("Error updating status:", error); alert("No se pudo actualizar el estado."); }
+            } catch (error) { 
+                console.error("Error updating status:", error); 
+                alert("No se pudo actualizar el estado."); 
+            }
         };
     </script>
 </body>
 </html>
+
