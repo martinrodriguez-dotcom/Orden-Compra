@@ -8,13 +8,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Inter', sans-serif; } </style>
+
+    <!-- ETIQUETAS PWA AÑADIDAS -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4338ca">
+
+    <style> 
+        body { font-family: 'Inter', sans-serif; } 
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
         <div class="mb-6">
-            <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
+            <a href="index.html" class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
@@ -22,9 +29,17 @@
             </a>
         </div>
         
-        <header class="mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Mi Perfil</h1>
-            <p class="text-gray-600 mt-1">Aquí puedes ver y actualizar tu información.</p>
+        <header class="mb-8 flex items-center gap-4">
+            <!-- LOGO AÑADIDO -->
+            <div class="bg-indigo-700 p-3 rounded-lg inline-block">
+                <svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                   <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Mi Perfil</h1>
+                <p class="text-gray-600 mt-1">Aquí puedes ver y actualizar tu información.</p>
+            </div>
         </header>
 
         <div id="profile-container" class="grid grid-cols-1 md:grid-cols-3 gap-8 hidden">
@@ -55,21 +70,21 @@
                     <h2 class="text-2xl font-semibold mb-4">Actualizar Nombre</h2>
                     <form id="update-name-form" class="space-y-4">
                         <div>
-                            <label for="new-name" class="block text-sm font-medium text-gray-700">Nuevo Nombre</p>
+                            <label for="new-name" class="block text-sm font-medium text-gray-700">Nuevo Nombre</label>
                             <input type="text" id="new-name" required class="mt-1 w-full p-2 border rounded-md">
                         </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">Guardar Nombre</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700">Guardar Nombre</button>
                     </form>
                 </div>
                 <div class="bg-white rounded-lg shadow-lg p-6">
                      <h2 class="text-2xl font-semibold mb-4">Cambiar Contraseña</h2>
                     <form id="update-password-form" class="space-y-4">
                         <div>
-                            <label for="current-password" class="block text-sm font-medium text-gray-700">Contraseña Actual</p>
+                            <label for="current-password" class="block text-sm font-medium text-gray-700">Contraseña Actual</label>
                             <input type="password" id="current-password" required class="mt-1 w-full p-2 border rounded-md">
                         </div>
                         <div>
-                            <label for="new-password" class="block text-sm font-medium text-gray-700">Nueva Contraseña</p>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700">Nueva Contraseña</label>
                             <input type="password" id="new-password" required class="mt-1 w-full p-2 border rounded-md">
                         </div>
                         <button type="submit" class="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-md hover:bg-orange-600">Cambiar Contraseña</button>
@@ -125,7 +140,7 @@
             if (userData.isAdmin) {
                 rolesContainer.innerHTML = '<span class="bg-red-100 text-red-800 text-sm font-bold mr-2 px-2.5 py-0.5 rounded-full">Administrador</span>';
             }
-            userData.roles.forEach(roleId => {
+            (userData.roles || []).forEach(roleId => {
                 rolesContainer.innerHTML += `<span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">${rolesDescription[roleId] || `Rol ${roleId}`}</span>`;
             });
         }
@@ -138,7 +153,6 @@
             setTimeout(() => feedbackMessage.classList.add('hidden'), 4000);
         }
 
-        // Formulario para actualizar nombre
         document.getElementById('update-name-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const newName = document.getElementById('new-name').value;
@@ -157,7 +171,6 @@
             }
         });
 
-        // Formulario para cambiar contraseña
         document.getElementById('update-password-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const currentPassword = document.getElementById('current-password').value;
@@ -171,14 +184,14 @@
                 await reauthenticateWithCredential(user, credential);
                 await updatePassword(user, newPassword);
                 showFeedback("Contraseña cambiada con éxito.");
-                e.target.reset(); // Limpiar el formulario
+                e.target.reset();
             } catch (error) {
                 console.error("Error al cambiar contraseña:", error.code);
                 let message = "No se pudo cambiar la contraseña.";
                 if (error.code === 'auth/wrong-password') {
                     message = "La contraseña actual es incorrecta.";
                 } else if (error.code === 'auth/weak-password') {
-                    message = "La nueva contraseña es demasiado débil.";
+                    message = "La nueva contraseña es demasiado débil (mín. 6 caracteres).";
                 }
                 showFeedback(message, true);
             }
