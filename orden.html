@@ -44,6 +44,29 @@
                         <h2 class="text-xl font-semibold mb-2">Justificación</h2>
                         <p id="order-justification" class="text-gray-700 bg-gray-50 p-4 rounded-md border"></p>
                     </section>
+                    
+                    <!-- NUEVO: Sección para mostrar al proveedor ganador -->
+                    <section id="winner-details-section" class="hidden">
+                        <h2 class="text-xl font-semibold mb-3 text-purple-800">Proveedor Asignado</h2>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-2">
+                            <h3 id="winner-provider-name" class="text-2xl font-bold text-purple-900"></h3>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                <div>
+                                    <p class="font-semibold text-gray-600">Costo Final (c/flete)</p>
+                                    <p id="winner-provider-cost" class="font-bold"></p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-600">Plazo de Pago</p>
+                                    <p id="winner-provider-term" class="font-bold"></p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-600">Método de Pago</p>
+                                    <p id="winner-provider-method" class="font-bold"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     <section>
                         <h2 class="text-xl font-semibold mb-3">Artículos</h2>
                         <div class="overflow-x-auto border rounded-lg">
@@ -76,89 +99,22 @@
         </div>
     </div>
 
-    <!-- Modal para Cargar Presupuesto -->
+    <!-- Modales -->
     <div id="budget-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="flex justify-between items-center p-5 border-b">
-                <h3 class="text-2xl font-semibold">Cargar Presupuesto</h3>
-                <button id="close-budget-modal-btn" class="text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            <form id="budget-form" class="flex-grow p-6 overflow-y-auto space-y-4">
-                <div>
-                    <label class="block text-sm font-medium">Nombre del Proveedor</label>
-                    <input type="text" id="provider-name" required class="mt-1 w-full p-2 border rounded-md">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium">Precio Presupuestado</label>
-                        <input type="number" id="budget-base-price" min="0" step="0.01" required class="mt-1 w-full p-2 border rounded-md">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Costo de Flete</label>
-                        <input type="number" id="shipping-cost" min="0" step="0.01" value="0" class="mt-1 w-full p-2 border rounded-md">
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <input type="checkbox" id="has-iva" class="h-4 w-4 rounded">
-                    <label for="has-iva" class="ml-2 text-sm">El precio ya contiene IVA (21%)</label>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium">Plazo de Pago (días)</label>
-                        <input type="number" id="payment-term" min="0" required value="0" class="mt-1 w-full p-2 border rounded-md">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium">Método de Pago</label>
-                        <input type="text" id="payment-method" required placeholder="Ej: Transferencia" class="mt-1 w-full p-2 border rounded-md">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium">Adjuntar Archivo</label>
-                    <input type="file" id="budget-file" class="mt-1 w-full text-sm">
-                </div>
-            </form>
-            <div class="p-5 border-t bg-gray-50">
-                <button type="submit" form="budget-form" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-bold">Guardar Presupuesto</button>
-            </div>
+            <div class="flex justify-between items-center p-5 border-b"><h3 class="text-2xl font-semibold">Cargar Presupuesto</h3><button id="close-budget-modal-btn" class="text-gray-400 hover:text-gray-600"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
+            <form id="budget-form" class="flex-grow p-6 overflow-y-auto space-y-4"><div><label class="block text-sm font-medium">Nombre del Proveedor</label><input type="text" id="provider-name" required class="mt-1 w-full p-2 border rounded-md"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Precio Presupuestado</label><input type="number" id="budget-base-price" min="0" step="0.01" required class="mt-1 w-full p-2 border rounded-md"></div><div><label class="block text-sm font-medium">Costo de Flete</label><input type="number" id="shipping-cost" min="0" step="0.01" value="0" class="mt-1 w-full p-2 border rounded-md"></div></div><div class="flex items-center"><input type="checkbox" id="has-iva" class="h-4 w-4 rounded"><label for="has-iva" class="ml-2 text-sm">El precio ya contiene IVA (21%)</label></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-medium">Plazo de Pago (días)</label><input type="number" id="payment-term" min="0" required value="0" class="mt-1 w-full p-2 border rounded-md"></div><div><label class="block text-sm font-medium">Método de Pago</label><input type="text" id="payment-method" required placeholder="Ej: Transferencia" class="mt-1 w-full p-2 border rounded-md"></div></div><div><label class="block text-sm font-medium">Adjuntar Archivo</label><input type="file" id="budget-file" class="mt-1 w-full text-sm"></div></form>
+            <div class="p-5 border-t bg-gray-50"><button type="submit" form="budget-form" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 font-bold">Guardar Presupuesto</button></div>
         </div>
     </div>
-
-    <!-- NUEVO: Modal de Confirmación del Ganador -->
     <div id="winner-confirmation-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-95 opacity-0">
-            <div class="p-5 border-b bg-green-50">
-                <h3 class="text-2xl font-semibold text-green-800">Proveedor Ganador Recomendado</h3>
-            </div>
-            <div class="p-6 space-y-4">
-                <h4 id="winner-name" class="text-3xl font-bold text-center"></h4>
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                        <p class="text-sm text-gray-500">Costo Final</p>
-                        <p id="winner-final-cost" class="text-2xl font-bold text-green-700"></p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Valor Presente (Costo Real)</p>
-                        <p id="winner-present-value" class="text-2xl font-bold text-blue-700"></p>
-                    </div>
-                </div>
-                <div>
-                    <h5 class="font-semibold text-gray-800 mb-2">Justificación de la Elección:</h5>
-                    <ul id="winner-justification-list" class="list-disc list-inside space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
-                        <!-- La justificación se generará aquí -->
-                    </ul>
-                </div>
-            </div>
-            <div class="flex justify-end items-center p-5 border-t bg-gray-50 gap-3">
-                <button id="cancel-winner-btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button>
-                <button id="confirm-winner-btn" class="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 font-bold">Confirmar y Asignar</button>
-            </div>
+            <div class="p-5 border-b bg-green-50"><h3 class="text-2xl font-semibold text-green-800">Proveedor Ganador Recomendado</h3></div>
+            <div class="p-6 space-y-4"><h4 id="winner-name" class="text-3xl font-bold text-center"></h4><div class="grid grid-cols-2 gap-4 text-center"><div><p class="text-sm text-gray-500">Costo Final</p><p id="winner-final-cost" class="text-2xl font-bold text-green-700"></p></div><div><p class="text-sm text-gray-500">Valor Presente (Costo Real)</p><p id="winner-present-value" class="text-2xl font-bold text-blue-700"></p></div></div><div><h5 class="font-semibold text-gray-800 mb-2">Justificación de la Elección:</h5><ul id="winner-justification-list" class="list-disc list-inside space-y-1 text-sm text-gray-700 bg-gray-50 p-3 rounded-md"></ul></div></div>
+            <div class="flex justify-end items-center p-5 border-t bg-gray-50 gap-3"><button id="cancel-winner-btn" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300">Cancelar</button><button id="confirm-winner-btn" class="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 font-bold">Confirmar y Asignar</button></div>
         </div>
     </div>
 
-    <!-- Carga del archivo de lógica -->
     <script src="orden.js" type="module"></script>
 </body>
 </html>
-
