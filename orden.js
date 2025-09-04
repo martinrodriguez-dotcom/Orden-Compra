@@ -28,7 +28,7 @@ const statusColors = {
     'Finalizada': 'bg-gray-500' 
 };
 
-// Función principal que se ejecuta cuando el HTML está listo
+// --- FUNCIÓN PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
     // Iniciar sesión anónimamente
     await signInAnonymously(auth);
@@ -137,7 +137,71 @@ function renderBudgetList(order) {
     }
 }
 
-// --- MANEJADORES DE EVENTOS Y LÓGICA ---
+// --- LÓGICA Y MANEJADORES DE EVENTOS ---
+
+function handleSelectWinner(order) {
+    if (!order.presupuestos || order.presupuestos.length === 0) return;
+    const TASA_ANUAL = 0.50; // Tasa de descuento anual
+    const tasaDiaria = Math.pow(1 + TASA_ANUAL, 1 / 365) - 1;
+    let ganador = null;
+    let valorPresenteMinimo = Infinity;
+
+    order.presupuestos.forEach(b => {
+        const precioConIVA = b.incluyeIVA ? b.precioBase : b.precioBase * 1.21;
+        const costoFinal = precioConIVA + (b.costoFlete || 0);
+        const valorPresente = costoFinal / Math.pow(1 + tasaDiaria, b.plazoPago);
+        if (valorPresente < valorPresenteMinimo) {
+            valorPresenteMinimo = valorPresente;
+            ganador = { ...b, costoFinalCalculado: costoFinal, valorPresenteCalculado: valorPresente };
+        }
+    });
+
+    if (ganador) {
+        showWinnerConfirmationModal(ganador, order.presupuestos);
+    }
+}
+
+function showWinnerConfirmationModal(winner, allBudgets) {
+    const modal = document.getElementById('winner-confirmation-modal');
+    document.getElementById('winner-name').textContent = winner.proveedor;
+    document.getElementById('winner-final-cost').textContent = formatCurrency(winner.costoFinalCalculado);
+    document.getElementById('winner-present-value').textContent = formatCurrency(winner.valorPresenteCalculado);
+    document.getElementById('winner-justification-list').innerHTML = generateJustification(winner, allBudgets);
+    
+    const confirmBtn = document.getElementById('confirm-winner-btn');
+    confirmBtn.onclick = () => {
+        updateUserAction('Pendiente Aprobar Proveedor', { proveedorGanador: winner });
+        closeModal(modal);
+    };
+
+    openModal(modal);
+}
+
+function generateJustification(winner, allBudgets) {
+    let reasons = [];
+    reasons.push(`Es la opción con el <strong>menor Valor Presente</strong> (costo real ajustado por plazo).`);
+    
+    const minCostoFinal = Math.min(...allBudgets.map(b => (b.incluyeIVA ? b.precioBase : b.precioBase * 1.21) + (b.costoFlete || 0)));
+    if (winner.costoFinalCalculado === minCostoFinal) {
+        reasons.push(`Coincide con el <strong>menor costo final</strong> sin ajuste financiero.`);
+    }
+
+    if (winner.costoFlete === 0) {
+        reasons.push(`No presenta costos de flete adicionales.`);
+    }
+
+    if (winner.incluyeIVA) {
+        reasons.push(`El precio presupuestado ya incluye IVA.`);
+    }
+
+    if (winner.plazoPago === 0) {
+        reasons.push(`Ofrece pago de contado.`);
+    } else {
+        reasons.push(`Presenta un plazo de pago de ${winner.plazoPago} días.`);
+    }
+
+    return reasons.map(reason => `<li>${reason}</li>`).join('');
+}
 
 async function handleBudgetSubmit(event) {
     event.preventDefault();
@@ -161,29 +225,6 @@ async function handleBudgetSubmit(event) {
     } catch (error) {
         console.error("Error al agregar presupuesto:", error);
         alert("No se pudo agregar el presupuesto.");
-    }
-}
-
-function handleSelectWinner(order) {
-    if (!order.presupuestos || order.presupuestos.length === 0) return;
-    const TASA_ANUAL = 0.50; // Tasa de descuento anual
-    const tasaDiaria = Math.pow(1 + TASA_ANUAL, 1 / 365) - 1;
-    let ganador = null;
-    let valorPresenteMinimo = Infinity;
-
-    order.presupuestos.forEach(b => {
-        const precioConIVA = b.incluyeIVA ? b.precioBase : b.precioBase * 1.21;
-        const costoFinal = precioConIVA + (b.costoFlete || 0);
-        const valorPresente = costoFinal / Math.pow(1 + tasaDiaria, b.plazoPago);
-
-        if (valorPresente < valorPresenteMinimo) {
-            valorPresenteMinimo = valorPresente;
-            ganador = { ...b, costoFinalCalculado: costoFinal, valorPresenteCalculado: valorPresente };
-        }
-    });
-
-    if (ganador) {
-        updateUserAction('Pendiente Aprobar Proveedor', { proveedorGanador: ganador });
     }
 }
 
@@ -213,9 +254,12 @@ function formatCurrency(value) {
 }
 
 const budgetModal = document.getElementById('budget-modal');
+const winnerModal = document.getElementById('winner-confirmation-modal');
 document.getElementById('budget-form').addEventListener('submit', handleBudgetSubmit);
 document.getElementById('close-budget-modal-btn').addEventListener('click', () => closeModal(budgetModal));
+document.getElementById('cancel-winner-btn').addEventListener('click', () => closeModal(winnerModal));
 budgetModal.addEventListener('click', (e) => { if (e.target === budgetModal) closeModal(budgetModal); });
+winnerModal.addEventListener('click', (e) => { if (e.target === winnerModal) closeModal(winnerModal); });
 
 function openModal(modal) {
     const c = modal.querySelector('.transform');
