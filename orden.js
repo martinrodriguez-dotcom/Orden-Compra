@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingMessage.classList.add('hidden');
             renderOrderDetails(order);
             renderHistory(order);
-            renderActionPanel(order, currentUser); // Pasamos el usuario actual
+            renderActionPanel(order, currentUser);
         } else {
             loadingMessage.textContent = 'Error: Orden no encontrada.';
             orderDetailsContainer.classList.add('hidden');
@@ -114,9 +114,11 @@ function renderHistory(order) {
 function renderActionPanel(order, currentUser) {
     const actionPanel = document.getElementById('action-panel');
     const requiredRole = statusToRoleMap[order.status];
-    const userHasPermission = currentUser.roles.includes(requiredRole);
+    
+    // El usuario tiene permiso si tiene el rol específico O si es administrador.
+    const userHasPermission = (currentUser.roles && currentUser.roles.includes(requiredRole)) || currentUser.isAdmin;
 
-    actionPanel.innerHTML = ''; // Limpiar siempre
+    actionPanel.innerHTML = '';
 
     if (requiredRole && !userHasPermission) {
         actionPanel.innerHTML = `
